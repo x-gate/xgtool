@@ -1,12 +1,14 @@
 package pkg
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"image"
+	"image/draw"
 	"io"
+	"os"
 )
 
 var (
@@ -14,6 +16,10 @@ var (
 	ErrInvalidMagic = errors.New("invalid magic")
 	// ErrDecodeFailed if graphic data decode failed.
 	ErrDecodeFailed = errors.New("decode failed")
+	// ErrEmptyPalette is returned when Graphic.ToImage is called but the palette is empty.
+	ErrEmptyPalette = errors.New("empty palette")
+	// ErrRenderFailed is returned when the Graphic.PaletteData[Graphic.GraphicData[i]] is out of range.
+	ErrRenderFailed = errors.New("render failed")
 )
 
 // GraphicInfo structure for each graphic info, 40 bytes.
@@ -61,10 +67,11 @@ func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err er
 	idx = make(GraphicInfoIndex)
 	mapIdx = make(GraphicInfoIndex)
 
-	r := bufio.NewReader(gif)
+	//r := bufio.NewReader(gif)
 	for {
 		buf := bytes.NewBuffer(make([]byte, 40))
-		if _, err = io.ReadFull(r, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
+		if _, err = io.ReadFull(gif, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
+			err = nil
 			break
 		} else if err != nil {
 			return nil, nil, err
@@ -82,6 +89,19 @@ func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err er
 	}
 
 	return
+}
+
+func (g *Graphic) setPaletteFromCGP(f *os.File) (err error) {
+	g.PaletteLen = 768
+	g.PaletteData, err = NewPaletteFromCGP(f)
+
+	return
+}
+
+// SetPalette set palette data directly.
+func (g *Graphic) SetPalette(p Palette) {
+	g.PaletteLen = int32(len(p)) * 3
+	g.PaletteData = p
 }
 
 // LoadGraphic loads graphic data from graphic file.
@@ -140,6 +160,28 @@ func (g *Graphic) decode() (err error) {
 
 	g.GraphicData = decoded[:len(decoded)-int(g.PaletteLen)]
 	g.PaletteData, err = NewPaletteFromBytes(decoded[len(decoded)-int(g.PaletteLen):])
+
+	return
+}
+
+// ToImage convert graphic data to image.Image.
+func (g *Graphic) ToImage() (img image.Image, err error) {
+	if len(g.PaletteData) == 0 {
+		return nil, ErrEmptyPalette
+	}
+
+	img = image.NewRGBA(image.Rect(0, 0, int(g.Info.Width), int(g.Info.Height)))
+
+	for i := 0; i < len(g.GraphicData); i++ {
+		w := int(g.Info.Width)
+		h := int(g.Info.Height)
+
+		if int(g.GraphicData[i]) >= len(g.PaletteData) {
+			return nil, fmt.Errorf("%w: info=%+v, header=%+v, g.GraphicData[i]=%d, len(g.PaletteData)=%d", ErrRenderFailed, g.Info, g.Header, g.GraphicData[i], len(g.PaletteData))
+		}
+
+		img.(draw.Image).Set(i%w, h-i/w, g.PaletteData[g.GraphicData[i]])
+	}
 
 	return
 }
