@@ -1,2 +1,4 @@
-testdata/
 output/
+testdata/**/*.bin
+testdata/**/*.cgp
+testdata/**/*.dat
