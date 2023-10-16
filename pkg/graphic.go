@@ -5,7 +5,15 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
+)
+
+var (
+	// ErrInvalidMagic if graphic header magic is not "RD".
+	ErrInvalidMagic = errors.New("invalid magic")
+	// ErrDecodeFailed if graphic data decode failed.
+	ErrDecodeFailed = errors.New("decode failed")
 )
 
 // GraphicInfo structure for each graphic info, 40 bytes.
@@ -72,6 +80,66 @@ func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err er
 			mapIdx[info.MapID] = info
 		}
 	}
+
+	return
+}
+
+// LoadGraphic loads graphic data from graphic file.
+func (gi GraphicInfo) LoadGraphic(gf io.ReadSeeker) (g *Graphic, err error) {
+	g = new(Graphic)
+	g.Info = &gi
+
+	if err = g.readGraphic(gf, int64(gi.Addr), int64(gi.Len)); err != nil {
+		return
+	}
+
+	if err = g.decode(); err != nil {
+		return
+	}
+
+	return
+}
+
+func (g *Graphic) readGraphic(f io.ReadSeeker, offset, len int64) (err error) {
+	if _, err = f.Seek(offset, io.SeekStart); err != nil {
+		return
+	}
+
+	buf := bytes.NewBuffer(make([]byte, len))
+	if _, err = io.ReadFull(f, buf.Bytes()); err != nil {
+		return
+	}
+
+	if err = binary.Read(buf, binary.LittleEndian, &g.Header); err != nil {
+		return
+	}
+
+	if g.Header.Magic[0] != 'R' || g.Header.Magic[1] != 'D' {
+		return fmt.Errorf("%w: info=%+v, header=%+v", ErrInvalidMagic, g.Info, g.Header)
+	}
+
+	if g.Header.Version >= 2 {
+		if err = binary.Read(buf, binary.LittleEndian, &g.PaletteLen); err != nil {
+			return
+		}
+	}
+
+	g.RawData = buf.Bytes()
+
+	return
+}
+
+func (g *Graphic) decode() (err error) {
+	var decoded []byte
+
+	if g.Header.Version&1 == 0 {
+		decoded = g.RawData
+	} else if decoded, err = Decode(g.RawData); err != nil {
+		return fmt.Errorf("%w: info=%+v, header=%+v", ErrDecodeFailed, g.Info, g.Header)
+	}
+
+	g.GraphicData = decoded[:len(decoded)-int(g.PaletteLen)]
+	g.PaletteData, err = NewPaletteFromBytes(decoded[len(decoded)-int(g.PaletteLen):])
 
 	return
 }
