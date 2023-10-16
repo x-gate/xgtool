@@ -1,5 +1,13 @@
 package pkg
 
+import (
+	"bufio"
+	"bytes"
+	"encoding/binary"
+	"errors"
+	"io"
+)
+
 // GraphicInfo structure for each graphic info, 40 bytes.
 type GraphicInfo struct {
 	ID     int32
@@ -37,4 +45,33 @@ type Graphic struct {
 }
 
 // GraphicInfoIndex is a map of GraphicInfo, key is GraphicInfo.ID or GraphicInfo.MapID.
-type GraphicInfoIndex map[int]GraphicInfo
+type GraphicInfoIndex map[int32]GraphicInfo
+
+// MakeGraphicInfoIndexes reads graphic info from src, and returns two GraphicInfoIndex,
+// first is indexed by GraphicInfo.ID, second is indexed by GraphicInfo.MapID.
+func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err error) {
+	idx = make(GraphicInfoIndex)
+	mapIdx = make(GraphicInfoIndex)
+
+	r := bufio.NewReader(gif)
+	for {
+		buf := bytes.NewBuffer(make([]byte, 40))
+		if _, err = io.ReadFull(r, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
+			break
+		} else if err != nil {
+			return nil, nil, err
+		}
+
+		var info GraphicInfo
+		if err = binary.Read(buf, binary.LittleEndian, &info); err != nil {
+			return nil, nil, err
+		}
+
+		idx[info.ID] = info
+		if info.MapID != 0 { // there are a lot of graphic info with MapID=0, but they are not used in map files
+			mapIdx[info.MapID] = info
+		}
+	}
+
+	return
+}
