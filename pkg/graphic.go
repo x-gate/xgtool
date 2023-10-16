@@ -9,6 +9,7 @@ import (
 	"image/draw"
 	"io"
 	"os"
+	"xgtool/internal"
 )
 
 var (
@@ -154,7 +155,7 @@ func (g *Graphic) decode() (err error) {
 
 	if g.Header.Version&1 == 0 {
 		decoded = g.RawData
-	} else if decoded, err = Decode(g.RawData); err != nil {
+	} else if decoded, err = internal.Decode(g.RawData); err != nil {
 		return fmt.Errorf("%w: info=%+v, header=%+v", ErrDecodeFailed, g.Info, g.Header)
 	}
 
