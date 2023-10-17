@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"errors"
@@ -68,10 +69,10 @@ func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err er
 	idx = make(GraphicInfoIndex)
 	mapIdx = make(GraphicInfoIndex)
 
-	//r := bufio.NewReader(gif)
+	r := bufio.NewReaderSize(gif, 40*100)
 	for {
 		buf := bytes.NewBuffer(make([]byte, 40))
-		if _, err = io.ReadFull(gif, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
+		if _, err = io.ReadFull(r, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
 			err = nil
 			break
 		} else if err != nil {
