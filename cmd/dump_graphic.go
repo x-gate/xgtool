@@ -13,19 +13,39 @@ import (
 	"xgtool/pkg"
 )
 
-var bar *progressbar.ProgressBar
-var wg sync.WaitGroup
-var flags dumpGraphicFlags
+var (
+	bar *progressbar.ProgressBar
+	wg  sync.WaitGroup
+)
+
+type dumpGraphicFlags struct {
+	GraphicInfoFile string
+	GraphicFile     string
+	PaletteFile     string
+	DryRun          bool
+}
+
+func (f *dumpGraphicFlags) Flags() *flag.FlagSet {
+	fs := flag.NewFlagSet("dump-graphic", flag.ExitOnError)
+	fs.StringVar(&f.GraphicInfoFile, "gif", "", "graphic info file path")
+	fs.StringVar(&f.GraphicFile, "gf", "", "graphic file path")
+	fs.StringVar(&f.PaletteFile, "pf", "", "palette file path")
+	fs.BoolVar(&f.DryRun, "dry-run", false, "dump without output files (for testing)")
+
+	return fs
+}
+
+var dgf dumpGraphicFlags
 
 func main() {
-	if err := flags.Flags().Parse(os.Args[1:]); err != nil {
+	if err := dgf.Flags().Parse(os.Args[1:]); err != nil {
 		log.Err(err).Send()
 		return
 	}
 
-	log.Debug().Msgf("dumpGraphicFlags: %+v", flags)
+	log.Debug().Msgf("dumpGraphicFlags: %+v", dgf)
 
-	files, err := openGraphicFiles(flags)
+	files, err := openGraphicFiles(dgf)
 	if err != nil {
 		log.Err(err).Send()
 		return
@@ -62,23 +82,6 @@ func main() {
 	wg.Wait()
 
 	return
-}
-
-type dumpGraphicFlags struct {
-	GraphicInfoFile string
-	GraphicFile     string
-	PaletteFile     string
-	DryRun          bool
-}
-
-func (f *dumpGraphicFlags) Flags() *flag.FlagSet {
-	fs := flag.NewFlagSet("dump-graphic", flag.ExitOnError)
-	fs.StringVar(&f.GraphicInfoFile, "gif", "", "graphic info file path")
-	fs.StringVar(&f.GraphicFile, "gf", "", "graphic file path")
-	fs.StringVar(&f.PaletteFile, "pf", "", "palette file path")
-	fs.BoolVar(&f.DryRun, "dry-run", false, "dump without output files (for testing)")
-
-	return fs
 }
 
 type graphicFiles struct {
@@ -127,31 +130,39 @@ func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette pkg.Palette) error {
 		g.SetPalette(palette)
 	}
 
-	go func() {
-		wg.Add(1)
-		defer wg.Done()
-
-		var img image.Image
-		if img, err = g.ToImage(); err != nil {
-			log.Err(err).Send()
-			return
-		}
-
-		var out *os.File
-		if flags.DryRun {
-			out, err = os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
-		} else {
-			out, err = os.OpenFile(fmt.Sprintf("output/%d.jpg", g.Info.ID), os.O_WRONLY|os.O_CREATE, 0644)
-		}
-		if err != nil {
-			log.Err(err).Send()
-		}
-		defer out.Close()
-
-		if err = jpeg.Encode(out, img, &jpeg.Options{Quality: 75}); err != nil {
-			log.Err(err).Send()
-		}
-	}()
+	go render(g)
 
 	return err
+}
+
+func render(g *pkg.Graphic) {
+	var err error
+
+	wg.Add(1)
+	defer wg.Done()
+
+	var img image.Image
+	if img, err = g.ToImage(); err != nil {
+		log.Err(err).Send()
+		return
+	}
+
+	var out *os.File
+	if out, err = output(*g.Info); err != nil {
+		log.Err(err).Send()
+		return
+	}
+	defer out.Close()
+
+	if err = jpeg.Encode(out, img, &jpeg.Options{Quality: 75}); err != nil {
+		log.Err(err).Send()
+	}
+}
+
+func output(gi pkg.GraphicInfo) (f *os.File, err error) {
+	if dgf.DryRun {
+		return os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
+	}
+
+	return os.OpenFile(fmt.Sprintf("output/%d.jpg", gi.ID), os.O_WRONLY|os.O_CREATE, 0644)
 }
