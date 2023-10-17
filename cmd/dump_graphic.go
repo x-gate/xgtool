@@ -10,6 +10,7 @@ import (
 	"image/jpeg"
 	"os"
 	"sync"
+	"xgtool/cmd/internal"
 	"xgtool/pkg"
 )
 
@@ -45,34 +46,19 @@ func main() {
 
 	log.Debug().Msgf("dumpGraphicFlags: %+v", dgf)
 
-	files, err := openGraphicFiles(dgf)
+	res, err := internal.OpenGraphicRes(dgf.GraphicInfoFile, dgf.GraphicFile, dgf.PaletteFile, "")
 	if err != nil {
 		log.Err(err).Send()
 		return
 	}
-	defer files.Close()
+	defer res.Close()
 
-	var palette pkg.Palette
-	if files.Palette != nil {
-		palette, err = pkg.NewPaletteFromCGP(files.Palette)
-		if err != nil {
-			log.Err(err).Send()
-			return
-		}
-	}
+	log.Debug().Msgf("len(graphicIndex): %d", len(res.IDIndex))
 
-	graphicIndex, _, err := pkg.MakeGraphicInfoIndexes(files.Info)
-	if err != nil {
-		log.Err(err).Send()
-		return
-	}
+	bar = progressbar.Default(int64(len(res.IDIndex)))
 
-	log.Debug().Msgf("len(graphicIndex): %d", len(graphicIndex))
-
-	bar = progressbar.Default(int64(len(graphicIndex)))
-
-	for _, gif := range graphicIndex {
-		if err = dumpGraphic(gif, files.Graphic, palette); err != nil {
+	for _, gif := range res.IDIndex {
+		if err = dumpGraphic(gif, res.GraphicFile, res.Palette); err != nil {
 			log.Err(err).Send()
 			return
 		}
@@ -82,36 +68,6 @@ func main() {
 	wg.Wait()
 
 	return
-}
-
-type graphicFiles struct {
-	Info    *os.File
-	Graphic *os.File
-	Palette *os.File
-}
-
-func openGraphicFiles(flags dumpGraphicFlags) (files graphicFiles, err error) {
-	if files.Info, err = os.Open(flags.GraphicInfoFile); err != nil {
-		return files, err
-	}
-	if files.Graphic, err = os.Open(flags.GraphicFile); err != nil {
-		return files, err
-	}
-
-	// palette file is optional
-	if flags.PaletteFile == "" {
-		return
-	}
-
-	files.Palette, err = os.Open(flags.PaletteFile)
-
-	return
-}
-
-func (f graphicFiles) Close() {
-	_ = f.Info.Close()
-	_ = f.Graphic.Close()
-	_ = f.Palette.Close()
 }
 
 func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette pkg.Palette) error {
