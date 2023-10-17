@@ -13,6 +13,7 @@ type Resources struct {
 	PaletteFile *os.File
 	Palette     pkg.Palette
 	MapFile     *os.File
+	Map         pkg.Map
 }
 
 func OpenGraphicRes(gif, gf, pf, mf string) (res Resources, err error) {
@@ -34,6 +35,7 @@ func OpenGraphicRes(gif, gf, pf, mf string) (res Resources, err error) {
 	// map file is optional
 	if mf != "" {
 		res.MapFile, err = os.Open(mf)
+		res.Map, err = pkg.MakeMap(res.MapFile)
 	}
 
 	return
