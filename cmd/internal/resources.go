@@ -55,6 +55,16 @@ func (r *Resources) OpenPalette(pf string) (err error) {
 	return
 }
 
+func (r *Resources) OpenMap(mf string) (err error) {
+	if r.MapFile, err = os.Open(mf); err != nil {
+		return
+	}
+	r.Map, err = pkg.MakeMap(r.MapFile)
+	_, _ = r.MapFile.Seek(0, io.SeekStart)
+
+	return
+}
+
 func (r *Resources) Close() {
 	_ = r.GraphicInfoFile.Close()
 	_ = r.GraphicFile.Close()
