@@ -223,7 +223,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 	}
 }
 
-func TestGraphic_ToImage(t *testing.T) {
+func TestGraphic_ImgRGBA(t *testing.T) {
 	testcases := []struct {
 		name string
 		gif  string
@@ -317,7 +317,7 @@ func TestGraphic_ToImage(t *testing.T) {
 				}
 			}
 
-			_, err = g.ToImage()
+			_, err = g.ImgRGBA()
 			if err != nil {
 				t.Fatal(err)
 			}

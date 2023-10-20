@@ -19,8 +19,10 @@ var (
 	ErrInvalidMagic = errors.New("invalid magic")
 	// ErrDecodeFailed if graphic data decode failed.
 	ErrDecodeFailed = errors.New("decode failed")
-	// ErrEmptyPalette is returned when Graphic.ToImage is called but the palette is empty.
+	// ErrEmptyPalette is returned when Graphic.Image is called but the palette is empty.
 	ErrEmptyPalette = errors.New("empty palette")
+	// ErrInvalidImgType is returned when Graphic.Image is called but the image type is not supported.
+	ErrInvalidImgType = errors.New("invalid image type")
 	// ErrRenderFailed is returned when the Graphic.PaletteData[Graphic.GraphicData[i]] is out of range.
 	ErrRenderFailed = errors.New("render failed")
 )
@@ -167,23 +169,42 @@ func (g *Graphic) decode() (err error) {
 	return
 }
 
-// ToImage convert graphic data to image.Image.
-func (g *Graphic) ToImage() (img image.Image, err error) {
+// ImgRGBA convert graphic data to image.RGBA
+func (g *Graphic) ImgRGBA() (img *image.RGBA, err error) {
 	if len(g.PaletteData) == 0 {
 		return nil, ErrEmptyPalette
 	}
 
 	img = image.NewRGBA(image.Rect(0, 0, int(g.Info.Width), int(g.Info.Height)))
+	err = g.setPixel(img)
 
-	for i := 0; i < len(g.GraphicData); i++ {
+	return
+}
+
+// ImgPaletted convert graphic data to image.Paletted
+//
+// Note: ImgPaletted is slower (x4 or more) than ImgRGBA, because it needs to index the palette data when set pixels.
+func (g *Graphic) ImgPaletted() (img *image.Paletted, err error) {
+	if len(g.PaletteData) == 0 {
+		return nil, ErrEmptyPalette
+	}
+
+	img = image.NewPaletted(image.Rect(0, 0, int(g.Info.Width), int(g.Info.Height)), g.PaletteData)
+	err = g.setPixel(img)
+
+	return
+}
+
+func (g *Graphic) setPixel(img image.Image) (err error) {
+	for i, pix := range g.GraphicData {
 		w := int(g.Info.Width)
 		h := int(g.Info.Height)
 
-		if int(g.GraphicData[i]) >= len(g.PaletteData) {
-			return nil, fmt.Errorf("%w: info=%+v, header=%+v, g.GraphicData[i]=%d, len(g.PaletteData)=%d", ErrRenderFailed, g.Info, g.Header, g.GraphicData[i], len(g.PaletteData))
+		if int(pix) >= len(g.PaletteData) {
+			return fmt.Errorf("%w: info=%+v, header=%+v, g.GraphicData[i]=%d, len(g.PaletteData)=%d", ErrRenderFailed, g.Info, g.Header, pix, len(g.PaletteData))
 		}
 
-		img.(draw.Image).Set(i%w, h-i/w, g.PaletteData[g.GraphicData[i]])
+		img.(draw.Image).Set(i%w, h-i/w, g.PaletteData[pix])
 	}
 
 	return
