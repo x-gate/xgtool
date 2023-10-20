@@ -13,9 +13,6 @@ const CGPSize = (256 - 32) * 3
 // Transparent is a color.RGBA with all fields set to 0.
 var Transparent = color.RGBA{}
 
-// Palette is a collection of colors, it usually 768 bytes (256 * 3), but not always.
-type Palette []color.Color
-
 var prefix = [...]color.Color{
 	color.RGBA{B: 0x00, G: 0x00, R: 0x00, A: 0x00}, // RGB(0, 0, 0) is a transparent color for CrossGate, set Alpha to 0 for transparent.
 	color.RGBA{B: 0x00, G: 0x00, R: 0x80, A: 0xff},
@@ -55,7 +52,7 @@ var suffix = [...]color.Color{
 }
 
 // NewPaletteFromCGP make palette from CGP file.
-func NewPaletteFromCGP(r io.Reader) (p Palette, err error) {
+func NewPaletteFromCGP(r io.Reader) (p color.Palette, err error) {
 	buf := bytes.NewBuffer(make([]byte, CGPSize))
 	if _, err = io.ReadFull(r, buf.Bytes()); err != nil {
 		return
@@ -72,7 +69,7 @@ func NewPaletteFromCGP(r io.Reader) (p Palette, err error) {
 }
 
 // NewPaletteFromBytes make palette from bytes.
-func NewPaletteFromBytes(b []byte) (p Palette, err error) {
+func NewPaletteFromBytes(b []byte) (p color.Palette, err error) {
 	buf := bytes.NewBuffer(b)
 	tmp := make([]byte, 3)
 

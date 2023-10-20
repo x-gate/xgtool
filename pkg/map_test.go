@@ -64,9 +64,6 @@ func TestMap_TiledMap(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	out, _ := os.OpenFile("../output/map.json", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	defer out.Close()
-
 	_, err = json.Marshal(tm)
 	if err != nil {
 		t.Fatal(err)

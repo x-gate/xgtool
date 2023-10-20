@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/schollz/progressbar/v3"
 	"image"
+	"image/color"
 	"image/jpeg"
 	"os"
 	"sync"
@@ -32,7 +33,7 @@ func main() {
 	}
 	defer files.Close()
 
-	var palette pkg.Palette
+	var palette color.Palette
 	if files.Palette != nil {
 		palette, err = pkg.NewPaletteFromCGP(files.Palette)
 		if err != nil {
@@ -111,7 +112,7 @@ func (f graphicFiles) Close() {
 	_ = f.Palette.Close()
 }
 
-func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette pkg.Palette) error {
+func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) error {
 	g, err := info.LoadGraphic(gf)
 	if err != nil && (errors.Is(err, pkg.ErrInvalidMagic) || errors.Is(err, pkg.ErrDecodeFailed)) {
 		log.Warn().Msgf("Invalid Graphic: %+v", err)

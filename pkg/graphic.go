@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
 	"io"
 	"os"
@@ -54,10 +55,10 @@ type graphicHeader struct {
 type Graphic struct {
 	Info        *GraphicInfo // Pointer of GraphicInfo, for reverse searching.
 	Header      graphicHeader
-	RawData     []byte  // The raw data which read from graphic file.
-	GraphicData []byte  // The decoded (if needed) data from RawData
-	PaletteLen  int32   // When Version >= 2, read this field from graphic file, it couldn't be set by direct set palette data.
-	PaletteData Palette // When Version < 2, set palette data from palette file; otherwise, set palette data from graphic file.
+	RawData     []byte        // The raw data which read from graphic file.
+	GraphicData []byte        // The decoded (if needed) data from RawData
+	PaletteLen  int32         // When Version >= 2, read this field from graphic file, it couldn't be set by direct set palette data.
+	PaletteData color.Palette // When Version < 2, set palette data from palette file; otherwise, set palette data from graphic file.
 }
 
 // GraphicInfoIndex is a map of GraphicInfo, key is GraphicInfo.ID or GraphicInfo.MapID.
@@ -101,7 +102,7 @@ func (g *Graphic) setPaletteFromCGP(f *os.File) (err error) {
 }
 
 // SetPalette set palette data directly.
-func (g *Graphic) SetPalette(p Palette) {
+func (g *Graphic) SetPalette(p color.Palette) {
 	g.PaletteLen = int32(len(p)) * 3
 	g.PaletteData = p
 }
