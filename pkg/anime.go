@@ -32,7 +32,9 @@ type animeHeader struct {
 // animeFrame structure for each anime frame, 10 bytes.
 type animeFrame struct {
 	GraphicID int32
-	_         [6]byte
+	OffX      int16
+	OffY      int16
+	Flag      int16
 }
 
 // Anime stores data for each anime, not a strict mapping to the file.
