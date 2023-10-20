@@ -12,7 +12,7 @@ func TestMakePaletteFromCGP(t *testing.T) {
 
 	for _, f := range palettes {
 		t.Run(f.Name(), func(t *testing.T) {
-			res := TestRes{}
+			res := testResource{}
 			defer res.Close()
 
 			if err := res.OpenPalette("../testdata/palette/" + f.Name()); err != nil {

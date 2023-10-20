@@ -139,6 +139,7 @@ func (ai AnimeInfo) readAnimeHeader(af *os.File, len int) (h animeHeader, err er
 	return
 }
 
+// GIF returns a gif.GIF from the anime.
 func (a Anime) GIF(p color.Palette) (img *gif.GIF, err error) {
 	img = new(gif.GIF)
 

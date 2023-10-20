@@ -11,7 +11,7 @@ func TestMakeMap(t *testing.T) {
 
 	for _, f := range maps {
 		t.Run(f.Name(), func(t *testing.T) {
-			res := TestRes{}
+			res := testResource{}
 			defer res.Close()
 
 			if err := res.OpenMap("../testdata/map/" + f.Name()); err != nil {
@@ -34,18 +34,18 @@ func TestMakeMap(t *testing.T) {
 }
 
 func TestMap_TiledMap(t *testing.T) {
-	res := TestRes{}
+	res := testResource{}
 	defer res.Close()
 
 	var err error
 	err = res.OpenGraphicInfo("../testdata/graphic_info/GraphicInfo_66.bin")
-	SkipIfNotExists("../testdata/graphic_info/GraphicInfo_66.bin", err, t)
+	skipIfNotExists("../testdata/graphic_info/GraphicInfo_66.bin", err, t)
 	err = res.OpenGraphic("../testdata/graphic/Graphic_66.bin")
-	SkipIfNotExists("../testdata/graphic/Graphic_66.bin", err, t)
+	skipIfNotExists("../testdata/graphic/Graphic_66.bin", err, t)
 	err = res.OpenPalette("../testdata/palette/palet_00.cgp")
-	SkipIfNotExists("../testdata/palette/palet_00.cgp", err, t)
+	skipIfNotExists("../testdata/palette/palet_00.cgp", err, t)
 	err = res.OpenMap("../testdata/map/1091.dat")
-	SkipIfNotExists("../testdata/map/1091.dat", err, t)
+	skipIfNotExists("../testdata/map/1091.dat", err, t)
 
 	tm, err := res.Map.TiledMap(res.GraphicInfoMapIndex, res.GraphicFile, res.Palette, "../output/")
 	if err != nil {

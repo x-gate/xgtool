@@ -28,11 +28,11 @@ func TestMakeGraphicIndex(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.filename, func(t *testing.T) {
-			res := TestRes{}
+			res := testResource{}
 			defer res.Close()
 
 			err := res.OpenGraphicInfo(tc.filename)
-			SkipIfNotExists(tc.filename, err, t)
+			skipIfNotExists(tc.filename, err, t)
 
 			if len(res.GraphicInfoIDIndex) != tc.expected[0] {
 				t.Errorf("expected len(index): %d, got %d", tc.expected, len(res.GraphicInfoIDIndex))
@@ -169,14 +169,14 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.graphicName, func(t *testing.T) {
-			res := TestRes{}
+			res := testResource{}
 			defer res.Close()
 
 			var err error
 			err = res.OpenGraphicInfo(tc.infoName)
-			SkipIfNotExists(tc.infoName, err, t)
+			skipIfNotExists(tc.infoName, err, t)
 			err = res.OpenGraphic(tc.graphicName)
-			SkipIfNotExists(tc.graphicName, err, t)
+			skipIfNotExists(tc.graphicName, err, t)
 
 			gi, err := readGraphicInfo(res.GraphicInfoFile)
 			if err != nil {
@@ -260,14 +260,14 @@ func TestGraphic_Img(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			res := TestRes{}
+			res := testResource{}
 			defer res.Close()
 
 			var err error
 			err = res.OpenGraphicInfo(tc.gif)
-			SkipIfNotExists(tc.gif, err, t)
+			skipIfNotExists(tc.gif, err, t)
 			err = res.OpenGraphic(tc.gf)
-			SkipIfNotExists(tc.gf, err, t)
+			skipIfNotExists(tc.gf, err, t)
 
 			gi, err := readGraphicInfo(res.GraphicInfoFile)
 			if err != nil {

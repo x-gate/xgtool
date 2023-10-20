@@ -29,11 +29,11 @@ func TestMakeAnimeIndex(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.filename, func(t *testing.T) {
-			res := TestRes{}
+			res := testResource{}
 			defer res.Close()
 
 			err := res.OpenAnimeInfo(tc.filename)
-			SkipIfNotExists(tc.filename, err, t)
+			skipIfNotExists(tc.filename, err, t)
 
 			if len(res.AnimeInfoIndex) != tc.expected {
 				t.Errorf("expected len(index): %d, got %d", tc.expected, len(res.AnimeInfoIndex))
@@ -162,19 +162,19 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.animeName, func(t *testing.T) {
-			res := TestRes{}
+			res := testResource{}
 			defer res.Close()
 
 			var err error
 
 			err = res.OpenAnimeInfo(tc.infoName)
-			SkipIfNotExists(tc.infoName, err, t)
+			skipIfNotExists(tc.infoName, err, t)
 			err = res.OpenAnime(tc.animeName)
-			SkipIfNotExists(tc.animeName, err, t)
+			skipIfNotExists(tc.animeName, err, t)
 			err = res.OpenGraphicInfo(tc.graphicInfoName)
-			SkipIfNotExists(tc.graphicInfoName, err, t)
+			skipIfNotExists(tc.graphicInfoName, err, t)
 			err = res.OpenGraphic(tc.graphicName)
-			SkipIfNotExists(tc.graphicName, err, t)
+			skipIfNotExists(tc.graphicName, err, t)
 
 			ai, err := readAnimeInfo(res.AnimeInfoFile)
 
@@ -231,21 +231,21 @@ func TestAnime_GIF_1(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			res := TestRes{}
+			res := testResource{}
 			defer res.Close()
 
 			var err error
 
 			err = res.OpenAnimeInfo(tc.animeInfo)
-			SkipIfNotExists(tc.animeInfo, err, t)
+			skipIfNotExists(tc.animeInfo, err, t)
 			err = res.OpenAnime(tc.anime)
-			SkipIfNotExists(tc.anime, err, t)
+			skipIfNotExists(tc.anime, err, t)
 			err = res.OpenGraphicInfo(tc.graphicInfo)
-			SkipIfNotExists(tc.graphicInfo, err, t)
+			skipIfNotExists(tc.graphicInfo, err, t)
 			err = res.OpenGraphic(tc.graphic)
-			SkipIfNotExists(tc.graphic, err, t)
+			skipIfNotExists(tc.graphic, err, t)
 			err = res.OpenPalette(tc.palette)
-			SkipIfNotExists(tc.palette, err, t)
+			skipIfNotExists(tc.palette, err, t)
 
 			ai, err := readAnimeInfo(res.AnimeInfoFile)
 			if err != nil {
@@ -341,26 +341,26 @@ func TestAnime_GIF_2(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			res := TestRes{}
-			pres := TestRes{}
+			res := testResource{}
+			pres := testResource{}
 			defer res.Close()
 			defer pres.Close()
 
 			var err error
 
 			err = res.OpenAnimeInfo(tc.animeInfo)
-			SkipIfNotExists(tc.animeInfo, err, t)
+			skipIfNotExists(tc.animeInfo, err, t)
 			err = res.OpenAnime(tc.anime)
-			SkipIfNotExists(tc.anime, err, t)
+			skipIfNotExists(tc.anime, err, t)
 			err = res.OpenGraphicInfo(tc.graphicInfo)
-			SkipIfNotExists(tc.graphicInfo, err, t)
+			skipIfNotExists(tc.graphicInfo, err, t)
 			err = res.OpenGraphic(tc.graphic)
-			SkipIfNotExists(tc.graphic, err, t)
+			skipIfNotExists(tc.graphic, err, t)
 
 			err = pres.OpenGraphicInfo(tc.paletteGraphicInfo)
-			SkipIfNotExists(tc.paletteGraphicInfo, err, t)
+			skipIfNotExists(tc.paletteGraphicInfo, err, t)
 			err = pres.OpenGraphic(tc.paletteGraphic)
-			SkipIfNotExists(tc.paletteGraphic, err, t)
+			skipIfNotExists(tc.paletteGraphic, err, t)
 
 			ai, err := readAnimeInfo(res.AnimeInfoFile)
 			if err != nil {

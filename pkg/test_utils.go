@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-type TestRes struct {
+type testResource struct {
 	GraphicInfoFileName string
 	GraphicInfoFile     *os.File
 	GraphicInfoIDIndex  GraphicInfoIndex
@@ -32,7 +32,7 @@ type TestRes struct {
 	Map         Map
 }
 
-func (r *TestRes) OpenGraphicInfo(gif string) (err error) {
+func (r *testResource) OpenGraphicInfo(gif string) (err error) {
 	r.GraphicInfoFileName = gif
 	if r.GraphicInfoFile, err = os.Open(gif); err != nil {
 		return
@@ -43,7 +43,7 @@ func (r *TestRes) OpenGraphicInfo(gif string) (err error) {
 	return
 }
 
-func (r *TestRes) OpenGraphic(gf string) (err error) {
+func (r *testResource) OpenGraphic(gf string) (err error) {
 	r.GraphicFileName = gf
 	r.GraphicFile, err = os.Open(gf)
 	_, _ = r.GraphicFile.Seek(0, io.SeekStart)
@@ -51,7 +51,7 @@ func (r *TestRes) OpenGraphic(gf string) (err error) {
 	return
 }
 
-func (r *TestRes) OpenPalette(pf string) (err error) {
+func (r *testResource) OpenPalette(pf string) (err error) {
 	r.PaletteFileName = pf
 	if r.PaletteFile, err = os.Open(pf); err != nil {
 		return
@@ -62,7 +62,7 @@ func (r *TestRes) OpenPalette(pf string) (err error) {
 	return
 }
 
-func (r *TestRes) OpenAnimeInfo(aif string) (err error) {
+func (r *testResource) OpenAnimeInfo(aif string) (err error) {
 	r.AnimeInfoFileName = aif
 	if r.AnimeInfoFile, err = os.Open(aif); err != nil {
 		return
@@ -73,7 +73,7 @@ func (r *TestRes) OpenAnimeInfo(aif string) (err error) {
 	return
 }
 
-func (r *TestRes) OpenAnime(af string) (err error) {
+func (r *testResource) OpenAnime(af string) (err error) {
 	r.AnimeFileName = af
 	r.AnimeFile, err = os.Open(af)
 	_, _ = r.AnimeFile.Seek(0, io.SeekStart)
@@ -81,7 +81,7 @@ func (r *TestRes) OpenAnime(af string) (err error) {
 	return
 }
 
-func (r *TestRes) OpenMap(mf string) (err error) {
+func (r *testResource) OpenMap(mf string) (err error) {
 	r.MapFileName = mf
 	if r.MapFile, err = os.Open(mf); err != nil {
 		return
@@ -92,7 +92,7 @@ func (r *TestRes) OpenMap(mf string) (err error) {
 	return
 }
 
-func (r *TestRes) Close() {
+func (r *testResource) Close() {
 	_ = r.GraphicInfoFile.Close()
 	_ = r.GraphicFile.Close()
 	_ = r.PaletteFile.Close()
@@ -101,7 +101,7 @@ func (r *TestRes) Close() {
 	_ = r.MapFile.Close()
 }
 
-func SkipIfNotExists(file string, err error, t *testing.T) {
+func skipIfNotExists(file string, err error, t *testing.T) {
 	if err != nil && os.IsNotExist(err) {
 		t.Skipf("skipping test; file %s does not exist", file)
 	} else if err != nil {
