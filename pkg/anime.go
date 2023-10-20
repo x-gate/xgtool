@@ -5,6 +5,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"image"
+	"image/color"
+	"image/gif"
 	"io"
 	"os"
 	"unsafe"
@@ -126,6 +129,36 @@ func (ai AnimeInfo) readAnimeHeader(af *os.File, len int) (h animeHeader, err er
 	}
 
 	h = *(*animeHeader)(unsafe.Pointer(&buf.Bytes()[0]))
+
+	return
+}
+
+func (a Anime) GIF(p color.Palette) (img *gif.GIF, err error) {
+	img = new(gif.GIF)
+
+	var w, h int
+	for _, g := range a.Graphic {
+		if len(g.PaletteData) == 0 {
+			g.SetPalette(p)
+		}
+
+		w = max(w, int(g.Header.Width))
+		h = max(h, int(g.Header.Height))
+
+		var i *image.Paletted
+		if i, err = g.ImgPaletted(); err != nil {
+			return
+		}
+
+		img.Image = append(img.Image, i)
+		img.Delay = append(img.Delay, int(a.Header.Duration)/int(a.Header.FrameCnt)/10)
+		img.Disposal = append(img.Disposal, gif.DisposalBackground)
+	}
+
+	img.Config = image.Config{
+		Width:  w,
+		Height: h,
+	}
 
 	return
 }
