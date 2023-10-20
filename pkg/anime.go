@@ -42,6 +42,7 @@ type animeFrame struct {
 
 // Anime stores data for each anime, not a strict mapping to the file.
 type Anime struct {
+	Info    AnimeInfo
 	Header  animeHeader
 	Frames  []animeFrame
 	Graphic []*Graphic
@@ -77,6 +78,7 @@ func MakeAnimeInfoIndex(src io.Reader) (AnimeIndex, error) {
 // LoadAnime loads anime data from anime file.
 func (ai AnimeInfo) LoadAnime(af *os.File, idx GraphicInfoIndex, gf io.ReadSeeker) (a *Anime, err error) {
 	a = new(Anime)
+	a.Info = ai
 
 	a.Header, err = ai.parseHeader(af)
 

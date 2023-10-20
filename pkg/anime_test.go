@@ -216,7 +216,7 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 	}
 }
 
-func TestAnime_GIF(t *testing.T) {
+func TestAnime_GIF_1(t *testing.T) {
 	testcases := []struct {
 		name        string
 		animeInfo   string
@@ -242,51 +242,11 @@ func TestAnime_GIF(t *testing.T) {
 			palette:     "../testdata/palette/palet_00.cgp",
 		},
 		{
-			name:        "AnimeInfoV3_8.bin",
-			animeInfo:   "../testdata/anime_info/AnimeInfoV3_8.bin",
-			anime:       "../testdata/anime/AnimeV3_8.bin",
-			graphicInfo: "../testdata/graphic_info/GraphicInfoV3_19.bin",
-			graphic:     "../testdata/graphic/GraphicV3_19.bin",
-			palette:     "../testdata/palette/palet_00.cgp",
-		},
-		{
-			name:        "AnimeInfo_PUK2_4.bin",
-			animeInfo:   "../testdata/anime_info/AnimeInfo_PUK2_4.bin",
-			anime:       "../testdata/anime/Anime_PUK2_4.bin",
-			graphicInfo: "../testdata/graphic_info/GraphicInfo_PUK2_2.bin",
-			graphic:     "../testdata/graphic/Graphic_PUK2_2.bin",
-			palette:     "../testdata/palette/palet_00.cgp",
-		},
-		{
-			name:        "AnimeInfo_PUK3_2.bin",
-			animeInfo:   "../testdata/anime_info/AnimeInfo_PUK3_2.bin",
-			anime:       "../testdata/anime/Anime_PUK3_2.bin",
-			graphicInfo: "../testdata/graphic_info/GraphicInfo_PUK3_1.bin",
-			graphic:     "../testdata/graphic/Graphic_PUK3_1.bin",
-			palette:     "../testdata/palette/palet_00.cgp",
-		},
-		{
 			name:        "AnimeInfo_Joy_91.bin",
 			animeInfo:   "../testdata/anime_info/AnimeInfo_Joy_91.bin",
 			anime:       "../testdata/anime/Anime_Joy_91.bin",
 			graphicInfo: "../testdata/graphic_info/GraphicInfo_Joy_125.bin",
 			graphic:     "../testdata/graphic/Graphic_Joy_125.bin",
-			palette:     "../testdata/palette/palet_00.cgp",
-		},
-		{
-			name:        "AnimeInfo_Joy_CH1.bin",
-			animeInfo:   "../testdata/anime_info/AnimeInfo_Joy_CH1.bin",
-			anime:       "../testdata/anime/Anime_Joy_CH1.bin",
-			graphicInfo: "../testdata/graphic_info/GraphicInfo_Joy_CH1.bin",
-			graphic:     "../testdata/graphic/Graphic_Joy_CH1.bin",
-			palette:     "../testdata/palette/palet_00.cgp",
-		},
-		{
-			name:        "AnimeInfo_Joy_EX_146.bin",
-			animeInfo:   "../testdata/anime_info/AnimeInfo_Joy_EX_146.bin",
-			anime:       "../testdata/anime/Anime_Joy_EX_146.bin",
-			graphicInfo: "../testdata/graphic_info/GraphicInfo_Joy_EX_152.bin",
-			graphic:     "../testdata/graphic/Graphic_Joy_EX_152.bin",
 			palette:     "../testdata/palette/palet_00.cgp",
 		},
 	}
@@ -359,6 +319,163 @@ func TestAnime_GIF(t *testing.T) {
 			}
 
 			t.Logf("%+v", img)
+
+			if len(img.Image) != int(a.Header.FrameCnt) {
+				t.Errorf("expected len(img.Image): %d, got %d", a.Header.FrameCnt, len(img.Image))
+			}
+
+			out, err := os.OpenFile(fmt.Sprintf("../output/%s.gif", tc.name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer out.Close()
+
+			if err = gif2.EncodeAll(out, img); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
+func TestAnime_GIF_2(t *testing.T) {
+	testcases := []struct {
+		name               string
+		animeInfo          string
+		anime              string
+		graphicInfo        string
+		graphic            string
+		paletteGraphicInfo string
+		paletteGraphic     string
+		palette            string
+	}{
+		{
+			name:               "AnimeInfoV3_8.bin",
+			animeInfo:          "../testdata/anime_info/AnimeInfoV3_8.bin",
+			anime:              "../testdata/anime/AnimeV3_8.bin",
+			graphicInfo:        "../testdata/graphic_info/GraphicInfoV3_19.bin",
+			graphic:            "../testdata/graphic/GraphicV3_19.bin",
+			paletteGraphicInfo: "../testdata/graphic_info/GraphicInfoV3_19.bin",
+			paletteGraphic:     "../testdata/graphic/GraphicV3_19.bin",
+		},
+		{
+			name:               "AnimeInfo_PUK2_4.bin",
+			animeInfo:          "../testdata/anime_info/AnimeInfo_PUK2_4.bin",
+			anime:              "../testdata/anime/Anime_PUK2_4.bin",
+			graphicInfo:        "../testdata/graphic_info/GraphicInfo_PUK2_2.bin",
+			graphic:            "../testdata/graphic/Graphic_PUK2_2.bin",
+			paletteGraphicInfo: "../testdata/graphic_info/GraphicInfoV3_19.bin",
+			paletteGraphic:     "../testdata/graphic/GraphicV3_19.bin",
+		},
+		{
+			name:               "AnimeInfo_PUK3_2.bin",
+			animeInfo:          "../testdata/anime_info/AnimeInfo_PUK3_2.bin",
+			anime:              "../testdata/anime/Anime_PUK3_2.bin",
+			graphicInfo:        "../testdata/graphic_info/GraphicInfo_PUK3_1.bin",
+			graphic:            "../testdata/graphic/Graphic_PUK3_1.bin",
+			paletteGraphicInfo: "../testdata/graphic_info/GraphicInfoV3_19.bin",
+			paletteGraphic:     "../testdata/graphic/GraphicV3_19.bin",
+		},
+		{
+			name:               "AnimeInfo_Joy_CH1.bin",
+			animeInfo:          "../testdata/anime_info/AnimeInfo_Joy_CH1.Bin",
+			anime:              "../testdata/anime/Anime_Joy_CH1.Bin",
+			graphicInfo:        "../testdata/graphic_info/GraphicInfo_Joy_CH1.bin",
+			graphic:            "../testdata/graphic/Graphic_Joy_CH1.bin",
+			paletteGraphicInfo: "../testdata/graphic_info/GraphicInfo_Joy_CH1.bin",
+			paletteGraphic:     "../testdata/graphic/Graphic_Joy_CH1.bin",
+		},
+		{
+			name:               "AnimeInfo_Joy_EX_146.bin",
+			animeInfo:          "../testdata/anime_info/AnimeInfo_Joy_EX_146.bin",
+			anime:              "../testdata/anime/Anime_Joy_EX_146.bin",
+			graphicInfo:        "../testdata/graphic_info/GraphicInfo_Joy_EX_152.bin",
+			graphic:            "../testdata/graphic/Graphic_Joy_EX_152.bin",
+			paletteGraphicInfo: "../testdata/graphic_info/GraphicInfo_Joy_EX_152.bin",
+			paletteGraphic:     "../testdata/graphic/Graphic_Joy_EX_152.bin",
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			aif, err := os.Open(tc.animeInfo)
+			if err != nil && errors.Is(err, os.ErrNotExist) {
+				t.Skipf("skipping test; file %s does not exist", tc.animeInfo)
+			} else if err != nil {
+				t.Fatal(err)
+			}
+			defer aif.Close()
+
+			af, err := os.Open(tc.anime)
+			if err != nil && errors.Is(err, os.ErrNotExist) {
+				t.Skipf("skipping test; file %s does not exist", tc.anime)
+			} else if err != nil {
+				t.Fatal(err)
+			}
+			defer af.Close()
+
+			gif, err := os.Open(tc.graphicInfo)
+			if err != nil && errors.Is(err, os.ErrNotExist) {
+				t.Skipf("skipping test; file %s does not exist", tc.graphicInfo)
+			} else if err != nil {
+				t.Fatal(err)
+			}
+			defer gif.Close()
+
+			gf, err := os.Open(tc.graphic)
+			if err != nil && errors.Is(err, os.ErrNotExist) {
+				t.Skipf("skipping test; file %s does not exist", tc.graphic)
+			} else if err != nil {
+				t.Fatal(err)
+			}
+			defer gf.Close()
+
+			pgif, err := os.Open(tc.paletteGraphicInfo)
+			if err != nil && errors.Is(err, os.ErrNotExist) {
+				t.Skipf("skipping test; file %s does not exist", tc.paletteGraphicInfo)
+			} else if err != nil {
+				t.Fatal(err)
+			}
+			defer pgif.Close()
+
+			pgf, err := os.Open(tc.paletteGraphic)
+			if err != nil && errors.Is(err, os.ErrNotExist) {
+				t.Skipf("skipping test; file %s does not exist", tc.paletteGraphic)
+			} else if err != nil {
+				t.Fatal(err)
+			}
+			defer pgf.Close()
+
+			ai, err := readAnimeInfo(aif)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			gidx, _, err := MakeGraphicInfoIndexes(gif)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, gmdx, err := MakeGraphicInfoIndexes(pgif)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			a, err := ai.LoadAnime(af, gidx, gf)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var pg *Graphic
+			if _, ok := gmdx[ai.ID]; !ok {
+				t.Fatalf("gmdx[%d] graphic info not found", ai.ID)
+			}
+			if pg, err = gmdx[ai.ID].LoadGraphic(pgf); err != nil {
+				t.Fatal(err)
+			}
+
+			img, err := a.GIF(pg.PaletteData)
+			if err != nil {
+				t.Fatal(err)
+			}
 
 			if len(img.Image) != int(a.Header.FrameCnt) {
 				t.Errorf("expected len(img.Image): %d, got %d", a.Header.FrameCnt, len(img.Image))
