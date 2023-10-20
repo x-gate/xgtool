@@ -3,7 +3,6 @@ package pkg
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	gif2 "image/gif"
 	"io"
@@ -30,21 +29,14 @@ func TestMakeAnimeIndex(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.filename, func(t *testing.T) {
-			aif, err := os.Open(tc.filename)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.filename)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer aif.Close()
+			res := TestRes{}
+			defer res.Close()
 
-			index, err := MakeAnimeInfoIndex(aif)
-			if err != nil {
-				t.Fatal(err)
-			}
+			err := res.OpenAnimeInfo(tc.filename)
+			SkipIfNotExists(tc.filename, err, t)
 
-			if len(index) != tc.expected {
-				t.Errorf("expected len(index): %d, got %d", tc.expected, len(index))
+			if len(res.AnimeInfoIndex) != tc.expected {
+				t.Errorf("expected len(index): %d, got %d", tc.expected, len(res.AnimeInfoIndex))
 			}
 		})
 	}
@@ -55,12 +47,14 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 		infoName        string
 		animeName       string
 		graphicInfoName string
+		graphicName     string
 		expectHeader    animeHeader
 	}{
 		{
 			infoName:        "../testdata/anime_info/AnimeInfo_4.bin",
 			animeName:       "../testdata/anime/Anime_4.bin",
 			graphicInfoName: "../testdata/graphic_info/GraphicInfo_66.bin",
+			graphicName:     "../testdata/graphic/Graphic_66.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   5,
@@ -72,6 +66,7 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			infoName:        "../testdata/anime_info/AnimeInfoEx_1.bin",
 			animeName:       "../testdata/anime/AnimeEx_1.bin",
 			graphicInfoName: "../testdata/graphic_info/GraphicInfoEx_5.bin",
+			graphicName:     "../testdata/graphic/GraphicEx_5.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   5,
@@ -83,6 +78,7 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			infoName:        "../testdata/anime_info/AnimeInfoV3_8.bin",
 			animeName:       "../testdata/anime/AnimeV3_8.bin",
 			graphicInfoName: "../testdata/graphic_info/GraphicInfoV3_19.bin",
+			graphicName:     "../testdata/graphic/GraphicV3_19.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   5,
@@ -96,6 +92,7 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			infoName:        "../testdata/anime_info/AnimeInfo_PUK2_4.bin",
 			animeName:       "../testdata/anime/Anime_PUK2_4.bin",
 			graphicInfoName: "../testdata/graphic_info/GraphicInfo_PUK2_2.bin",
+			graphicName:     "../testdata/graphic/Graphic_PUK2_2.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   5,
@@ -109,6 +106,7 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			infoName:        "../testdata/anime_info/AnimeInfo_PUK3_2.bin",
 			animeName:       "../testdata/anime/Anime_PUK3_2.bin",
 			graphicInfoName: "../testdata/graphic_info/GraphicInfo_PUK3_1.bin",
+			graphicName:     "../testdata/graphic/Graphic_PUK3_1.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   0,
@@ -122,6 +120,7 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			infoName:        "../testdata/anime_info/AnimeInfo_Joy_91.bin",
 			animeName:       "../testdata/anime/Anime_Joy_91.bin",
 			graphicInfoName: "../testdata/graphic_info/GraphicInfo_Joy_125.bin",
+			graphicName:     "../testdata/graphic/Graphic_Joy_125.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   0,
@@ -135,6 +134,7 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			infoName:        "../testdata/anime_info/AnimeInfo_Joy_CH1.Bin",
 			animeName:       "../testdata/anime/Anime_Joy_CH1.bin",
 			graphicInfoName: "../testdata/graphic_info/GraphicInfo_Joy_CH1.bin",
+			graphicName:     "../testdata/graphic/Graphic_Joy_CH1.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   5,
@@ -148,6 +148,7 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			infoName:        "../testdata/anime_info/AnimeInfo_Joy_EX_146.bin",
 			animeName:       "../testdata/anime/Anime_Joy_EX_146.bin",
 			graphicInfoName: "../testdata/graphic_info/GraphicInfo_Joy_EX_152.bin",
+			graphicName:     "../testdata/graphic/Graphic_Joy_EX_152.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   5,
@@ -161,44 +162,23 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.animeName, func(t *testing.T) {
-			aif, err := os.Open(tc.infoName)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.infoName)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer aif.Close()
+			res := TestRes{}
+			defer res.Close()
 
-			af, err := os.Open(tc.animeName)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.animeName)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer af.Close()
+			var err error
 
-			ai, err := readAnimeInfo(aif)
+			err = res.OpenAnimeInfo(tc.infoName)
+			SkipIfNotExists(tc.infoName, err, t)
+			err = res.OpenAnime(tc.animeName)
+			SkipIfNotExists(tc.animeName, err, t)
+			err = res.OpenGraphicInfo(tc.graphicInfoName)
+			SkipIfNotExists(tc.graphicInfoName, err, t)
+			err = res.OpenGraphic(tc.graphicName)
+			SkipIfNotExists(tc.graphicName, err, t)
 
-			gif, err := os.Open("../testdata/graphic_info/GraphicInfo_66.bin")
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.animeName)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer gif.Close()
-			gf, err := os.Open("../testdata/graphic/Graphic_66.bin")
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.animeName)
-			} else if err != nil {
-				t.Fatal(err)
-			}
+			ai, err := readAnimeInfo(res.AnimeInfoFile)
 
-			idx, _, err := MakeGraphicInfoIndexes(gif)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			a, err := ai.LoadAnime(af, idx, gf)
+			a, err := ai.LoadAnime(res.AnimeFile, res.GraphicInfoIDIndex, res.GraphicFile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -210,8 +190,6 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			if len(a.Frames) != int(a.Header.FrameCnt) {
 				t.Errorf("expected len(a.Frames): %d, got %d", a.Header.FrameCnt, len(a.Frames))
 			}
-
-			t.Logf("%+v", a)
 		})
 	}
 }
@@ -253,67 +231,33 @@ func TestAnime_GIF_1(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			aif, err := os.Open(tc.animeInfo)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.animeInfo)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer aif.Close()
+			res := TestRes{}
+			defer res.Close()
 
-			af, err := os.Open(tc.anime)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.anime)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer af.Close()
+			var err error
 
-			gif, err := os.Open(tc.graphicInfo)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.graphicInfo)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer gif.Close()
+			err = res.OpenAnimeInfo(tc.animeInfo)
+			SkipIfNotExists(tc.animeInfo, err, t)
+			err = res.OpenAnime(tc.anime)
+			SkipIfNotExists(tc.anime, err, t)
+			err = res.OpenGraphicInfo(tc.graphicInfo)
+			SkipIfNotExists(tc.graphicInfo, err, t)
+			err = res.OpenGraphic(tc.graphic)
+			SkipIfNotExists(tc.graphic, err, t)
+			err = res.OpenPalette(tc.palette)
+			SkipIfNotExists(tc.palette, err, t)
 
-			gf, err := os.Open(tc.graphic)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.graphic)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer gf.Close()
-
-			pf, err := os.Open(tc.palette)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.palette)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer pf.Close()
-
-			ai, err := readAnimeInfo(aif)
+			ai, err := readAnimeInfo(res.AnimeInfoFile)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			gidx, _, err := MakeGraphicInfoIndexes(gif)
+			a, err := ai.LoadAnime(res.AnimeFile, res.GraphicInfoIDIndex, res.GraphicFile)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			a, err := ai.LoadAnime(af, gidx, gf)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			p, err := NewPaletteFromCGP(pf)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			img, err := a.GIF(p)
+			img, err := a.GIF(res.Palette)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -397,78 +341,42 @@ func TestAnime_GIF_2(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			aif, err := os.Open(tc.animeInfo)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.animeInfo)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer aif.Close()
+			res := TestRes{}
+			pres := TestRes{}
+			defer res.Close()
+			defer pres.Close()
 
-			af, err := os.Open(tc.anime)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.anime)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer af.Close()
+			var err error
 
-			gif, err := os.Open(tc.graphicInfo)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.graphicInfo)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer gif.Close()
+			err = res.OpenAnimeInfo(tc.animeInfo)
+			SkipIfNotExists(tc.animeInfo, err, t)
+			err = res.OpenAnime(tc.anime)
+			SkipIfNotExists(tc.anime, err, t)
+			err = res.OpenGraphicInfo(tc.graphicInfo)
+			SkipIfNotExists(tc.graphicInfo, err, t)
+			err = res.OpenGraphic(tc.graphic)
+			SkipIfNotExists(tc.graphic, err, t)
 
-			gf, err := os.Open(tc.graphic)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.graphic)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer gf.Close()
+			err = pres.OpenGraphicInfo(tc.paletteGraphicInfo)
+			SkipIfNotExists(tc.paletteGraphicInfo, err, t)
+			err = pres.OpenGraphic(tc.paletteGraphic)
+			SkipIfNotExists(tc.paletteGraphic, err, t)
 
-			pgif, err := os.Open(tc.paletteGraphicInfo)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.paletteGraphicInfo)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer pgif.Close()
-
-			pgf, err := os.Open(tc.paletteGraphic)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.paletteGraphic)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer pgf.Close()
-
-			ai, err := readAnimeInfo(aif)
+			ai, err := readAnimeInfo(res.AnimeInfoFile)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			gidx, _, err := MakeGraphicInfoIndexes(gif)
-			if err != nil {
-				t.Fatal(err)
-			}
-			_, gmdx, err := MakeGraphicInfoIndexes(pgif)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			a, err := ai.LoadAnime(af, gidx, gf)
+			a, err := ai.LoadAnime(res.AnimeFile, res.GraphicInfoIDIndex, res.GraphicFile)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			var pg *Graphic
-			if _, ok := gmdx[ai.ID]; !ok {
+			if _, ok := pres.GraphicInfoMapIndex[ai.ID]; !ok {
 				t.Fatalf("gmdx[%d] graphic info not found", ai.ID)
 			}
-			if pg, err = gmdx[ai.ID].LoadGraphic(pgf); err != nil {
+			if pg, err = pres.GraphicInfoMapIndex[ai.ID].LoadGraphic(pres.GraphicFile); err != nil {
 				t.Fatal(err)
 			}
 

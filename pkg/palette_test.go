@@ -12,13 +12,14 @@ func TestMakePaletteFromCGP(t *testing.T) {
 
 	for _, f := range palettes {
 		t.Run(f.Name(), func(t *testing.T) {
-			file, err := os.Open("../testdata/palette/" + f.Name())
-			if err != nil {
+			res := TestRes{}
+			defer res.Close()
+
+			if err := res.OpenPalette("../testdata/palette/" + f.Name()); err != nil {
 				t.Fatal(err)
 			}
-			defer file.Close()
 
-			p, err := NewPaletteFromCGP(file)
+			p, err := NewPaletteFromCGP(res.PaletteFile)
 			if err != nil {
 				t.Fatal(err)
 			}

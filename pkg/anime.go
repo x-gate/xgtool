@@ -48,12 +48,12 @@ type Anime struct {
 	Graphic []*Graphic
 }
 
-// AnimeIndex is a map is a map of AnimeInfo, key is the ID of the anime.
-type AnimeIndex map[int32]AnimeInfo
+// AnimeInfoIndex is a map is a map of AnimeInfo, key is the ID of the anime.
+type AnimeInfoIndex map[int32]AnimeInfo
 
 // MakeAnimeInfoIndex reads anime info from src, and returns AnimeInfoIndex.
-func MakeAnimeInfoIndex(src io.Reader) (AnimeIndex, error) {
-	index := make(AnimeIndex)
+func MakeAnimeInfoIndex(src io.Reader) (AnimeInfoIndex, error) {
+	index := make(AnimeInfoIndex)
 
 	r := bufio.NewReader(src)
 	for {
@@ -131,6 +131,10 @@ func (ai AnimeInfo) readAnimeHeader(af *os.File, len int) (h animeHeader, err er
 	}
 
 	h = *(*animeHeader)(unsafe.Pointer(&buf.Bytes()[0]))
+	if len == 12 {
+		h.Reversed = 0
+		h.Sentinel = 0
+	}
 
 	return
 }

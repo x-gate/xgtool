@@ -10,7 +10,6 @@ import (
 	"image/color"
 	"image/draw"
 	"io"
-	"os"
 	"xgtool/internal"
 )
 
@@ -92,13 +91,6 @@ func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err er
 			mapIdx[info.MapID] = info
 		}
 	}
-
-	return
-}
-
-func (g *Graphic) setPaletteFromCGP(f *os.File) (err error) {
-	g.PaletteLen = 768
-	g.PaletteData, err = NewPaletteFromCGP(f)
 
 	return
 }

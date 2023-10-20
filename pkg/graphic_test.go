@@ -3,7 +3,6 @@ package pkg
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"io"
 	"os"
 	"testing"
@@ -29,27 +28,18 @@ func TestMakeGraphicIndex(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.filename, func(t *testing.T) {
-			gif, err := os.Open(tc.filename)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.filename)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer gif.Close()
+			res := TestRes{}
+			defer res.Close()
 
-			idIndex, mapIndex, err := MakeGraphicInfoIndexes(gif)
-			if err != nil {
-				t.Fatal(err)
-			}
+			err := res.OpenGraphicInfo(tc.filename)
+			SkipIfNotExists(tc.filename, err, t)
 
-			if len(idIndex) != tc.expected[0] {
-				t.Errorf("expected len(index): %d, got %d", tc.expected, len(idIndex))
+			if len(res.GraphicInfoIDIndex) != tc.expected[0] {
+				t.Errorf("expected len(index): %d, got %d", tc.expected, len(res.GraphicInfoIDIndex))
 			}
-			if len(mapIndex) != tc.expected[1] {
-				t.Errorf("expected len(index): %d, got %d", tc.expected, len(mapIndex))
+			if len(res.GraphicInfoMapIndex) != tc.expected[1] {
+				t.Errorf("expected len(index): %d, got %d", tc.expected, len(res.GraphicInfoMapIndex))
 			}
-
-			// t.Logf("%+v, %+v", idIndex[0], mapIndex[0])
 		})
 	}
 }
@@ -179,28 +169,21 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.graphicName, func(t *testing.T) {
-			gif, err := os.Open(tc.infoName)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.infoName)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer gif.Close()
+			res := TestRes{}
+			defer res.Close()
 
-			gf, err := os.Open(tc.graphicName)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.graphicName)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer gf.Close()
+			var err error
+			err = res.OpenGraphicInfo(tc.infoName)
+			SkipIfNotExists(tc.infoName, err, t)
+			err = res.OpenGraphic(tc.graphicName)
+			SkipIfNotExists(tc.graphicName, err, t)
 
-			gi, err := readGraphicInfo(gif)
+			gi, err := readGraphicInfo(res.GraphicInfoFile)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			g, err := gi.LoadGraphic(gf)
+			g, err := gi.LoadGraphic(res.GraphicFile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -223,7 +206,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 	}
 }
 
-func TestGraphic_ImgRGBA(t *testing.T) {
+func TestGraphic_Img(t *testing.T) {
 	testcases := []struct {
 		name string
 		gif  string
@@ -277,47 +260,36 @@ func TestGraphic_ImgRGBA(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			gif, err := os.Open(tc.gif)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.gif)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer gif.Close()
+			res := TestRes{}
+			defer res.Close()
 
-			gf, err := os.Open(tc.gf)
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				t.Skipf("skipping test; file %s does not exist", tc.gf)
-			} else if err != nil {
-				t.Fatal(err)
-			}
-			defer gf.Close()
+			var err error
+			err = res.OpenGraphicInfo(tc.gif)
+			SkipIfNotExists(tc.gif, err, t)
+			err = res.OpenGraphic(tc.gf)
+			SkipIfNotExists(tc.gf, err, t)
 
-			gi, err := readGraphicInfo(gif)
+			gi, err := readGraphicInfo(res.GraphicInfoFile)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			g, err := gi.LoadGraphic(gf)
+			g, err := gi.LoadGraphic(res.GraphicFile)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			if tc.pf != "" {
-				pf, err := os.Open(tc.pf)
-				if err != nil && errors.Is(err, os.ErrNotExist) {
-					t.Skipf("skipping test; file %s does not exist", tc.pf)
-				} else if err != nil {
-					t.Fatal(err)
-				}
-				defer pf.Close()
-
-				if err = g.setPaletteFromCGP(pf); err != nil {
-					t.Fatal(err)
-				}
+				err = res.OpenPalette(tc.pf)
+				g.SetPalette(res.Palette)
 			}
 
 			_, err = g.ImgRGBA()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, err = g.ImgPaletted()
 			if err != nil {
 				t.Fatal(err)
 			}
