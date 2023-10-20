@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/cristalhq/acmd"
 	"xgtool/cmd/convertmap"
+	"xgtool/cmd/dumpanime"
 	"xgtool/cmd/dumpgraphic"
 )
 
@@ -15,6 +16,11 @@ func main() {
 			Name:        "dump-graphic",
 			Description: "Dump graphic from graphic & graphic info file",
 			ExecFunc:    dumpgraphic.DumpGraphic,
+		},
+		{
+			Name:        "dump-anime",
+			Description: "Dump anime from anime & anime info file",
+			ExecFunc:    dumpanime.DumpAnime,
 		},
 		{
 			Name:        "convert-map",

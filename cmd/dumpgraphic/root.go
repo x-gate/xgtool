@@ -11,15 +11,17 @@ import (
 	"image/color"
 	"image/jpeg"
 	"os"
+	"path/filepath"
 	"sync"
 	"xgtool/pkg"
 )
 
 type flags struct {
-	gif string
-	gf  string
-	pf  string
-	dr  bool // dry-run
+	gif    string
+	gf     string
+	pf     string
+	outdir string
+	dr     bool // dry-run
 }
 
 func (f *flags) Flags() (fs *flag.FlagSet) {
@@ -27,6 +29,7 @@ func (f *flags) Flags() (fs *flag.FlagSet) {
 	fs.StringVar(&f.gif, "gif", "", "graphic info file path")
 	fs.StringVar(&f.gf, "gf", "", "graphic file path")
 	fs.StringVar(&f.pf, "pf", "", "palette file path")
+	fs.StringVar(&f.outdir, "o", "output", "output directory")
 	fs.BoolVar(&f.dr, "dry-run", false, "dump without output files (for testing)")
 
 	return
@@ -101,7 +104,7 @@ func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) error
 		if f.dr {
 			out, err = os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
 		} else {
-			out, err = os.OpenFile(fmt.Sprintf("output/%d.jpg", g.Info.ID), os.O_WRONLY|os.O_CREATE, 0644)
+			out, err = os.OpenFile(fmt.Sprintf("%s/%d.jpg", filepath.Clean(f.outdir), g.Info.ID), os.O_WRONLY|os.O_CREATE, 0644)
 		}
 		if err != nil {
 			log.Err(err).Send()
