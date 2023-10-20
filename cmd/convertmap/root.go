@@ -1,4 +1,4 @@
-package convert_map
+package convertmap
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
-	"xgtool/cmd/internal"
 	"xgtool/internal/tmx"
+	"xgtool/pkg"
 )
 
 type flags struct {
@@ -39,6 +39,7 @@ var (
 	f flags
 )
 
+// ConvertMap the entrypoint of "convert-map" command
 func ConvertMap(ctx context.Context, args []string) (err error) {
 	if err = f.Flags().Parse(args); err != nil {
 		return
@@ -47,7 +48,7 @@ func ConvertMap(ctx context.Context, args []string) (err error) {
 		f.outdir = os.TempDir()
 	}
 
-	res := internal.Resources{}
+	res := pkg.Resources{}
 	defer res.Close()
 
 	if err = res.OpenGraphicInfo(f.gif); err != nil {

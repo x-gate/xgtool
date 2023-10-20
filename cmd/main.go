@@ -2,10 +2,11 @@ package main
 
 import (
 	"github.com/cristalhq/acmd"
-	"xgtool/cmd/convert_map"
-	"xgtool/cmd/dump_graphic"
+	"xgtool/cmd/convertmap"
+	"xgtool/cmd/dumpgraphic"
 )
 
+// Version it can be set by ldflags="main.Version=x.x.x"
 var Version = "0.0.0"
 
 func main() {
@@ -13,12 +14,12 @@ func main() {
 		{
 			Name:        "dump-graphic",
 			Description: "Dump graphic from graphic & graphic info file",
-			ExecFunc:    dump_graphic.DumpGraphic,
+			ExecFunc:    dumpgraphic.DumpGraphic,
 		},
 		{
 			Name:        "convert-map",
 			Description: "Convert map into TMX format",
-			ExecFunc:    convert_map.ConvertMap,
+			ExecFunc:    convertmap.ConvertMap,
 		},
 	}
 

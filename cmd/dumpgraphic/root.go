@@ -1,4 +1,4 @@
-package dump_graphic
+package dumpgraphic
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"image/jpeg"
 	"os"
 	"sync"
-	"xgtool/cmd/internal"
 	"xgtool/pkg"
 )
 
@@ -39,12 +38,13 @@ var (
 	f   flags
 )
 
+// DumpGraphic the entrypoint of "dump-graphic" command
 func DumpGraphic(ctx context.Context, args []string) (err error) {
 	if err = f.Flags().Parse(args); err != nil {
 		return
 	}
 
-	res := internal.Resources{}
+	res := pkg.Resources{}
 	defer res.Close()
 	if err = res.OpenGraphicInfo(f.gif); err != nil {
 		return

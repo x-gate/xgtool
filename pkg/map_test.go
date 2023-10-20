@@ -11,7 +11,7 @@ func TestMakeMap(t *testing.T) {
 
 	for _, f := range maps {
 		t.Run(f.Name(), func(t *testing.T) {
-			res := testResource{}
+			res := Resources{}
 			defer res.Close()
 
 			if err := res.OpenMap("../testdata/map/" + f.Name()); err != nil {
@@ -34,7 +34,7 @@ func TestMakeMap(t *testing.T) {
 }
 
 func TestMap_TiledMap(t *testing.T) {
-	res := testResource{}
+	res := Resources{}
 	defer res.Close()
 
 	var err error
@@ -47,7 +47,7 @@ func TestMap_TiledMap(t *testing.T) {
 	err = res.OpenMap("../testdata/map/1091.dat")
 	skipIfNotExists("../testdata/map/1091.dat", err, t)
 
-	tm, err := res.Map.TiledMap(res.GraphicInfoMapIndex, res.GraphicFile, res.Palette, "../output/")
+	tm, err := res.Map.TiledMap(res.GraphicMapIndex, res.GraphicFile, res.Palette, "../output/")
 	if err != nil {
 		t.Fatal(err)
 	}

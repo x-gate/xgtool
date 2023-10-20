@@ -3,11 +3,10 @@ package pkg
 import (
 	"bytes"
 	"encoding/binary"
+	"github.com/google/go-cmp/cmp"
 	"io"
 	"os"
 	"testing"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestMakeGraphicIndex(t *testing.T) {
@@ -28,17 +27,17 @@ func TestMakeGraphicIndex(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.filename, func(t *testing.T) {
-			res := testResource{}
+			res := Resources{}
 			defer res.Close()
 
 			err := res.OpenGraphicInfo(tc.filename)
 			skipIfNotExists(tc.filename, err, t)
 
-			if len(res.GraphicInfoIDIndex) != tc.expected[0] {
-				t.Errorf("expected len(index): %d, got %d", tc.expected, len(res.GraphicInfoIDIndex))
+			if len(res.GraphicIDIndex) != tc.expected[0] {
+				t.Errorf("expected len(index): %d, got %d", tc.expected, len(res.GraphicIDIndex))
 			}
-			if len(res.GraphicInfoMapIndex) != tc.expected[1] {
-				t.Errorf("expected len(index): %d, got %d", tc.expected, len(res.GraphicInfoMapIndex))
+			if len(res.GraphicMapIndex) != tc.expected[1] {
+				t.Errorf("expected len(index): %d, got %d", tc.expected, len(res.GraphicMapIndex))
 			}
 		})
 	}
@@ -169,7 +168,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.graphicName, func(t *testing.T) {
-			res := testResource{}
+			res := Resources{}
 			defer res.Close()
 
 			var err error
@@ -260,7 +259,7 @@ func TestGraphic_Img(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			res := testResource{}
+			res := Resources{}
 			defer res.Close()
 
 			var err error

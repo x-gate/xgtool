@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/google/go-cmp/cmp"
 	gif2 "image/gif"
 	"io"
 	"os"
 	"testing"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestMakeAnimeIndex(t *testing.T) {
@@ -29,7 +28,7 @@ func TestMakeAnimeIndex(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.filename, func(t *testing.T) {
-			res := testResource{}
+			res := Resources{}
 			defer res.Close()
 
 			err := res.OpenAnimeInfo(tc.filename)
@@ -162,7 +161,7 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.animeName, func(t *testing.T) {
-			res := testResource{}
+			res := Resources{}
 			defer res.Close()
 
 			var err error
@@ -178,7 +177,7 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 
 			ai, err := readAnimeInfo(res.AnimeInfoFile)
 
-			a, err := ai.LoadAnime(res.AnimeFile, res.GraphicInfoIDIndex, res.GraphicFile)
+			a, err := ai.LoadAnime(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -231,7 +230,7 @@ func TestAnime_GIF_1(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			res := testResource{}
+			res := Resources{}
 			defer res.Close()
 
 			var err error
@@ -252,7 +251,7 @@ func TestAnime_GIF_1(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			a, err := ai.LoadAnime(res.AnimeFile, res.GraphicInfoIDIndex, res.GraphicFile)
+			a, err := ai.LoadAnime(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -341,8 +340,8 @@ func TestAnime_GIF_2(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			res := testResource{}
-			pres := testResource{}
+			res := Resources{}
+			pres := Resources{}
 			defer res.Close()
 			defer pres.Close()
 
@@ -367,16 +366,16 @@ func TestAnime_GIF_2(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			a, err := ai.LoadAnime(res.AnimeFile, res.GraphicInfoIDIndex, res.GraphicFile)
+			a, err := ai.LoadAnime(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			var pg *Graphic
-			if _, ok := pres.GraphicInfoMapIndex[ai.ID]; !ok {
+			if _, ok := pres.GraphicMapIndex[ai.ID]; !ok {
 				t.Fatalf("gmdx[%d] graphic info not found", ai.ID)
 			}
-			if pg, err = pres.GraphicInfoMapIndex[ai.ID].LoadGraphic(pres.GraphicFile); err != nil {
+			if pg, err = pres.GraphicMapIndex[ai.ID].LoadGraphic(pres.GraphicFile); err != nil {
 				t.Fatal(err)
 			}
 
