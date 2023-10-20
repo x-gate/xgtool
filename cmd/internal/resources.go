@@ -2,49 +2,64 @@ package internal
 
 import (
 	"image/color"
+	"io"
 	"os"
 	"xgtool/pkg"
 )
 
 type Resources struct {
-	InfoFile    *os.File
-	IDIndex     pkg.GraphicInfoIndex
-	MapIndex    pkg.GraphicInfoIndex
+	GraphicInfoFile *os.File
+	GraphicIDIndex  pkg.GraphicInfoIndex
+	GraphicMapIndex pkg.GraphicInfoIndex
+
 	GraphicFile *os.File
+
 	PaletteFile *os.File
 	Palette     color.Palette
-	MapFile     *os.File
-	Map         pkg.Map
+
+	MapFile *os.File
+	Map     pkg.Map
+
+	AnimeInfoFile  *os.File
+	AnimeInfoIndex pkg.AnimeInfoIndex
+
+	AnimeFile *os.File
 }
 
-func OpenGraphicRes(gif, gf, pf, mf string) (res Resources, err error) {
-	if res.InfoFile, err = os.Open(gif); err != nil {
-		return res, err
-	}
-	res.IDIndex, res.MapIndex, err = pkg.MakeGraphicInfoIndexes(res.InfoFile)
-
-	if res.GraphicFile, err = os.Open(gf); err != nil {
-		return res, err
+func (r *Resources) OpenGraphicInfo(gif string) (err error) {
+	if r.GraphicInfoFile, err = os.Open(gif); err != nil {
+		return
 	}
 
-	// palette file is optional
-	if pf != "" {
-		res.PaletteFile, err = os.Open(pf)
-		res.Palette, err = pkg.NewPaletteFromCGP(res.PaletteFile)
+	if r.GraphicIDIndex, r.GraphicMapIndex, err = pkg.MakeGraphicInfoIndexes(r.GraphicInfoFile); err != nil {
+		return
 	}
-
-	// map file is optional
-	if mf != "" {
-		res.MapFile, err = os.Open(mf)
-		res.Map, err = pkg.MakeMap(res.MapFile)
-	}
+	_, _ = r.GraphicInfoFile.Seek(0, io.SeekStart)
 
 	return
 }
 
-func (f Resources) Close() {
-	_ = f.InfoFile.Close()
-	_ = f.GraphicFile.Close()
-	_ = f.PaletteFile.Close()
-	_ = f.MapFile.Close()
+func (r *Resources) OpenGraphic(gf string) (err error) {
+	r.GraphicFile, err = os.Open(gf)
+
+	return
+}
+
+func (r *Resources) OpenPalette(pf string) (err error) {
+	if r.PaletteFile, err = os.Open(pf); err != nil {
+		return
+	}
+	r.Palette, err = pkg.NewPaletteFromCGP(r.PaletteFile)
+	_, _ = r.PaletteFile.Seek(0, io.SeekStart)
+
+	return
+}
+
+func (r *Resources) Close() {
+	_ = r.GraphicInfoFile.Close()
+	_ = r.GraphicFile.Close()
+	_ = r.PaletteFile.Close()
+	_ = r.MapFile.Close()
+	_ = r.AnimeInfoFile.Close()
+	_ = r.AnimeFile.Close()
 }
