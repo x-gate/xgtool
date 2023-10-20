@@ -37,8 +37,9 @@ type animeFrame struct {
 
 // Anime stores data for each anime, not a strict mapping to the file.
 type Anime struct {
-	Header animeHeader
-	Frames []animeFrame
+	Header  animeHeader
+	Frames  []animeFrame
+	Graphic []*Graphic
 }
 
 // AnimeIndex is a map is a map of AnimeInfo, key is the ID of the anime.
@@ -69,7 +70,7 @@ func MakeAnimeInfoIndex(src io.Reader) (AnimeIndex, error) {
 }
 
 // LoadAnime loads anime data from anime file.
-func (ai AnimeInfo) LoadAnime(af *os.File) (a *Anime, err error) {
+func (ai AnimeInfo) LoadAnime(af *os.File, idx GraphicInfoIndex, gf io.ReadSeeker) (a *Anime, err error) {
 	a = new(Anime)
 
 	a.Header, err = ai.parseHeader(af)
@@ -85,7 +86,13 @@ func (ai AnimeInfo) LoadAnime(af *os.File) (a *Anime, err error) {
 			return
 		}
 
+		var g *Graphic
+		if g, err = idx[frame.GraphicID].LoadGraphic(gf); err != nil {
+			return
+		}
+
 		a.Frames = append(a.Frames, frame)
+		a.Graphic = append(a.Graphic, g)
 	}
 
 	return

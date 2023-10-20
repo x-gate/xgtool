@@ -50,13 +50,15 @@ func TestMakeAnimeIndex(t *testing.T) {
 
 func TestAnimeInfo_LoadAnime(t *testing.T) {
 	testcases := []struct {
-		infoName     string
-		animeName    string
-		expectHeader animeHeader
+		infoName        string
+		animeName       string
+		graphicInfoName string
+		expectHeader    animeHeader
 	}{
 		{
-			infoName:  "../testdata/anime_info/AnimeInfo_4.bin",
-			animeName: "../testdata/anime/Anime_4.bin",
+			infoName:        "../testdata/anime_info/AnimeInfo_4.bin",
+			animeName:       "../testdata/anime/Anime_4.bin",
+			graphicInfoName: "../testdata/graphic_info/GraphicInfo_66.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   5,
@@ -65,8 +67,9 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			},
 		},
 		{
-			infoName:  "../testdata/anime_info/AnimeInfoEx_1.bin",
-			animeName: "../testdata/anime/AnimeEx_1.bin",
+			infoName:        "../testdata/anime_info/AnimeInfoEx_1.bin",
+			animeName:       "../testdata/anime/AnimeEx_1.bin",
+			graphicInfoName: "../testdata/graphic_info/GraphicInfoEx_5.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   5,
@@ -75,8 +78,9 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			},
 		},
 		{
-			infoName:  "../testdata/anime_info/AnimeInfoV3_8.bin",
-			animeName: "../testdata/anime/AnimeV3_8.bin",
+			infoName:        "../testdata/anime_info/AnimeInfoV3_8.bin",
+			animeName:       "../testdata/anime/AnimeV3_8.bin",
+			graphicInfoName: "../testdata/graphic_info/GraphicInfoV3_19.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   5,
@@ -87,8 +91,9 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			},
 		},
 		{
-			infoName:  "../testdata/anime_info/AnimeInfo_PUK2_4.bin",
-			animeName: "../testdata/anime/Anime_PUK2_4.bin",
+			infoName:        "../testdata/anime_info/AnimeInfo_PUK2_4.bin",
+			animeName:       "../testdata/anime/Anime_PUK2_4.bin",
+			graphicInfoName: "../testdata/graphic_info/GraphicInfo_PUK2_2.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   5,
@@ -99,8 +104,9 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			},
 		},
 		{
-			infoName:  "../testdata/anime_info/AnimeInfo_PUK3_2.bin",
-			animeName: "../testdata/anime/Anime_PUK3_2.bin",
+			infoName:        "../testdata/anime_info/AnimeInfo_PUK3_2.bin",
+			animeName:       "../testdata/anime/Anime_PUK3_2.bin",
+			graphicInfoName: "../testdata/graphic_info/GraphicInfo_PUK3_1.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   0,
@@ -111,8 +117,9 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			},
 		},
 		{
-			infoName:  "../testdata/anime_info/AnimeInfo_Joy_91.bin",
-			animeName: "../testdata/anime/Anime_Joy_91.bin",
+			infoName:        "../testdata/anime_info/AnimeInfo_Joy_91.bin",
+			animeName:       "../testdata/anime/Anime_Joy_91.bin",
+			graphicInfoName: "../testdata/graphic_info/GraphicInfo_Joy_125.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   0,
@@ -123,8 +130,9 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			},
 		},
 		{
-			infoName:  "../testdata/anime_info/AnimeInfo_Joy_CH1.Bin",
-			animeName: "../testdata/anime/Anime_Joy_CH1.bin",
+			infoName:        "../testdata/anime_info/AnimeInfo_Joy_CH1.Bin",
+			animeName:       "../testdata/anime/Anime_Joy_CH1.bin",
+			graphicInfoName: "../testdata/graphic_info/GraphicInfo_Joy_CH1.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   5,
@@ -135,8 +143,9 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 			},
 		},
 		{
-			infoName:  "../testdata/anime_info/AnimeInfo_Joy_EX_146.bin",
-			animeName: "../testdata/anime/Anime_Joy_EX_146.bin",
+			infoName:        "../testdata/anime_info/AnimeInfo_Joy_EX_146.bin",
+			animeName:       "../testdata/anime/Anime_Joy_EX_146.bin",
+			graphicInfoName: "../testdata/graphic_info/GraphicInfo_Joy_EX_152.bin",
 			expectHeader: animeHeader{
 				Direct:   0,
 				Action:   5,
@@ -168,7 +177,26 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 
 			ai, err := readAnimeInfo(aif)
 
-			a, err := ai.LoadAnime(af)
+			gif, err := os.Open("../testdata/graphic_info/GraphicInfo_66.bin")
+			if err != nil && errors.Is(err, os.ErrNotExist) {
+				t.Skipf("skipping test; file %s does not exist", tc.animeName)
+			} else if err != nil {
+				t.Fatal(err)
+			}
+			defer gif.Close()
+			gf, err := os.Open("../testdata/graphic/Graphic_66.bin")
+			if err != nil && errors.Is(err, os.ErrNotExist) {
+				t.Skipf("skipping test; file %s does not exist", tc.animeName)
+			} else if err != nil {
+				t.Fatal(err)
+			}
+
+			idx, _, err := MakeGraphicInfoIndexes(gif)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			a, err := ai.LoadAnime(af, idx, gf)
 			if err != nil {
 				t.Fatal(err)
 			}
