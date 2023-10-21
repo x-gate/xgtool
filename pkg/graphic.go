@@ -1,14 +1,15 @@
 package pkg
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
 	"io"
-	"os"
 	"xgtool/internal"
 )
 
@@ -17,8 +18,10 @@ var (
 	ErrInvalidMagic = errors.New("invalid magic")
 	// ErrDecodeFailed if graphic data decode failed.
 	ErrDecodeFailed = errors.New("decode failed")
-	// ErrEmptyPalette is returned when Graphic.ToImage is called but the palette is empty.
+	// ErrEmptyPalette is returned when Graphic.Image is called but the palette is empty.
 	ErrEmptyPalette = errors.New("empty palette")
+	// ErrInvalidImgType is returned when Graphic.Image is called but the image type is not supported.
+	ErrInvalidImgType = errors.New("invalid image type")
 	// ErrRenderFailed is returned when the Graphic.PaletteData[Graphic.GraphicData[i]] is out of range.
 	ErrRenderFailed = errors.New("render failed")
 )
@@ -53,10 +56,10 @@ type graphicHeader struct {
 type Graphic struct {
 	Info        *GraphicInfo // Pointer of GraphicInfo, for reverse searching.
 	Header      graphicHeader
-	RawData     []byte  // The raw data which read from graphic file.
-	GraphicData []byte  // The decoded (if needed) data from RawData
-	PaletteLen  int32   // When Version >= 2, read this field from graphic file, it couldn't be set by direct set palette data.
-	PaletteData Palette // When Version < 2, set palette data from palette file; otherwise, set palette data from graphic file.
+	RawData     []byte        // The raw data which read from graphic file.
+	GraphicData []byte        // The decoded (if needed) data from RawData
+	PaletteLen  int32         // When Version >= 2, read this field from graphic file, it couldn't be set by direct set palette data.
+	PaletteData color.Palette // When Version < 2, set palette data from palette file; otherwise, set palette data from graphic file.
 }
 
 // GraphicInfoIndex is a map of GraphicInfo, key is GraphicInfo.ID or GraphicInfo.MapID.
@@ -68,10 +71,10 @@ func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err er
 	idx = make(GraphicInfoIndex)
 	mapIdx = make(GraphicInfoIndex)
 
-	//r := bufio.NewReader(gif)
+	r := bufio.NewReaderSize(gif, 40*100)
 	for {
 		buf := bytes.NewBuffer(make([]byte, 40))
-		if _, err = io.ReadFull(gif, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
+		if _, err = io.ReadFull(r, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
 			err = nil
 			break
 		} else if err != nil {
@@ -92,15 +95,8 @@ func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err er
 	return
 }
 
-func (g *Graphic) setPaletteFromCGP(f *os.File) (err error) {
-	g.PaletteLen = 768
-	g.PaletteData, err = NewPaletteFromCGP(f)
-
-	return
-}
-
 // SetPalette set palette data directly.
-func (g *Graphic) SetPalette(p Palette) {
+func (g *Graphic) SetPalette(p color.Palette) {
 	g.PaletteLen = int32(len(p)) * 3
 	g.PaletteData = p
 }
@@ -165,23 +161,42 @@ func (g *Graphic) decode() (err error) {
 	return
 }
 
-// ToImage convert graphic data to image.Image.
-func (g *Graphic) ToImage() (img image.Image, err error) {
+// ImgRGBA convert graphic data to image.RGBA
+func (g *Graphic) ImgRGBA() (img *image.RGBA, err error) {
 	if len(g.PaletteData) == 0 {
 		return nil, ErrEmptyPalette
 	}
 
 	img = image.NewRGBA(image.Rect(0, 0, int(g.Info.Width), int(g.Info.Height)))
+	err = g.setPixel(img)
 
-	for i := 0; i < len(g.GraphicData); i++ {
+	return
+}
+
+// ImgPaletted convert graphic data to image.Paletted
+//
+// Note: ImgPaletted is slower (x4 or more) than ImgRGBA, because it needs to index the palette data when set pixels.
+func (g *Graphic) ImgPaletted() (img *image.Paletted, err error) {
+	if len(g.PaletteData) == 0 {
+		return nil, ErrEmptyPalette
+	}
+
+	img = image.NewPaletted(image.Rect(0, 0, int(g.Info.Width), int(g.Info.Height)), g.PaletteData)
+	err = g.setPixel(img)
+
+	return
+}
+
+func (g *Graphic) setPixel(img image.Image) (err error) {
+	for i, pix := range g.GraphicData {
 		w := int(g.Info.Width)
 		h := int(g.Info.Height)
 
-		if int(g.GraphicData[i]) >= len(g.PaletteData) {
-			return nil, fmt.Errorf("%w: info=%+v, header=%+v, g.GraphicData[i]=%d, len(g.PaletteData)=%d", ErrRenderFailed, g.Info, g.Header, g.GraphicData[i], len(g.PaletteData))
+		if int(pix) >= len(g.PaletteData) {
+			return fmt.Errorf("%w: info=%+v, header=%+v, g.GraphicData[i]=%d, len(g.PaletteData)=%d", ErrRenderFailed, g.Info, g.Header, pix, len(g.PaletteData))
 		}
 
-		img.(draw.Image).Set(i%w, h-i/w, g.PaletteData[g.GraphicData[i]])
+		img.(draw.Image).Set(i%w, h-i/w, g.PaletteData[pix])
 	}
 
 	return
