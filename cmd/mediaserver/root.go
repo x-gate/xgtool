@@ -11,6 +11,9 @@ import (
 )
 
 func MediaServer(ctx context.Context, args []string) error {
+	openVersionResources()
+	defer closeVersionResources()
+
 	r := gin.Default()
 
 	r.GET("/ping", ping)
