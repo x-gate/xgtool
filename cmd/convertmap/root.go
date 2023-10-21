@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 	"xgtool/internal/tmx"
 	"xgtool/pkg"
+
+	"github.com/rs/zerolog/log"
 )
 
 type flags struct {

@@ -3,10 +3,11 @@ package pkg
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/google/go-cmp/cmp"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestMakeGraphicIndex(t *testing.T) {

@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/cristalhq/acmd"
 	"xgtool/cmd/convertmap"
 	"xgtool/cmd/dumpanime"
 	"xgtool/cmd/dumpgraphic"
+
+	"github.com/cristalhq/acmd"
 )
 
 // Version it can be set by ldflags="main.Version=x.x.x"

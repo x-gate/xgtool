@@ -5,14 +5,15 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/schollz/progressbar/v3"
 	"image/color"
 	"image/gif"
 	"os"
 	"path/filepath"
 	"sync"
 	"xgtool/pkg"
+
+	"github.com/rs/zerolog/log"
+	"github.com/schollz/progressbar/v3"
 )
 
 var errPaletteNotFound = errors.New("palette not found")

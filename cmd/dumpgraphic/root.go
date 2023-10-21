@@ -5,8 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/schollz/progressbar/v3"
 	"image"
 	"image/color"
 	"image/jpeg"
@@ -14,6 +12,9 @@ import (
 	"path/filepath"
 	"sync"
 	"xgtool/pkg"
+
+	"github.com/rs/zerolog/log"
+	"github.com/schollz/progressbar/v3"
 )
 
 type flags struct {
