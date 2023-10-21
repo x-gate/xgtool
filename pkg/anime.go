@@ -105,7 +105,7 @@ func (ai AnimeInfo) LoadAllAnimes(af *os.File, idx GraphicInfoIndex, gf io.ReadS
 	return
 }
 
-func (ai AnimeInfo) readAnimeHeader(af *os.File, len int) (h animeHeader, err error) {
+func (ai AnimeInfo) readAnimeHeader(af io.Reader, len int) (h animeHeader, err error) {
 	buf := bytes.NewBuffer(make([]byte, len))
 	if _, err = io.ReadFull(af, buf.Bytes()); err != nil {
 		return
@@ -120,7 +120,7 @@ func (ai AnimeInfo) readAnimeHeader(af *os.File, len int) (h animeHeader, err er
 	return
 }
 
-func (ai AnimeInfo) readAnimeFrames(af *os.File, cnt int, idx GraphicInfoIndex, gf io.ReadSeeker) (f []animeFrame, g []*Graphic, err error) {
+func (ai AnimeInfo) readAnimeFrames(af io.Reader, cnt int, idx GraphicInfoIndex, gf io.ReadSeeker) (f []animeFrame, g []*Graphic, err error) {
 	f = make([]animeFrame, 0, cnt)
 	g = make([]*Graphic, 0, cnt)
 

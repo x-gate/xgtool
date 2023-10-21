@@ -11,6 +11,7 @@ import (
 	"image/gif"
 	"os"
 	"path/filepath"
+	"sync"
 	"xgtool/pkg"
 )
 
@@ -45,6 +46,7 @@ func (f *flags) Flags() (fs *flag.FlagSet) {
 
 var (
 	bar *progressbar.ProgressBar
+	wg  sync.WaitGroup
 	f   flags
 )
 
@@ -97,6 +99,8 @@ func DumpAnime(ctx context.Context, args []string) (err error) {
 		_ = bar.Add(1)
 	}
 
+	wg.Wait()
+
 	return
 }
 
@@ -110,9 +114,9 @@ func palette(res pkg.Resources, pres pkg.Resources, ai pkg.AnimeInfo) (p color.P
 			}
 
 			return pg.PaletteData, nil
-		} else {
-			log.Debug().Msgf("hidden palette not found: %+v", ai)
 		}
+
+		log.Debug().Msgf("hidden palette not found: %+v", ai)
 	}
 
 	// use cgp palette
@@ -130,25 +134,32 @@ func dumpAnime(ai pkg.AnimeInfo, af *os.File, idx pkg.GraphicInfoIndex, gf *os.F
 	}
 
 	for i, a := range animes {
-		var img *gif.GIF
-		if img, err = a.GIF(p); err != nil {
-			log.Err(err).Send()
-			return
-		}
+		go func(a *pkg.Anime, i int) {
+			wg.Add(1)
+			defer wg.Done()
 
-		var out *os.File
-		if f.dr {
-			out, err = os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
-		} else {
-			out, err = os.OpenFile(fmt.Sprintf("%s/%d-%d.gif", filepath.Clean(f.outdir), ai.ID, i), os.O_WRONLY|os.O_CREATE, 0644)
-		}
-		if err != nil {
-			return
-		}
+			var img *gif.GIF
+			if img, err = a.GIF(p); err != nil {
+				log.Err(err).Msgf("anime: %+v", a.Info)
+				return
+			}
 
-		if err = gif.EncodeAll(out, img); err != nil {
-			return
-		}
+			var out *os.File
+			if f.dr {
+				out, err = os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
+			} else {
+				out, err = os.OpenFile(fmt.Sprintf("%s/%d-%d.gif", filepath.Clean(f.outdir), ai.ID, i), os.O_WRONLY|os.O_CREATE, 0644)
+			}
+			if err != nil {
+				log.Err(err).Msgf("anime: %+v", a.Info)
+				return
+			}
+
+			if err = gif.EncodeAll(out, img); err != nil {
+				log.Err(err).Msgf("anime: %+v", a.Info)
+				return
+			}
+		}(a, i)
 	}
 
 	return
