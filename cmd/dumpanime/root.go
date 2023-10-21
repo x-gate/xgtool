@@ -101,17 +101,21 @@ func DumpAnime(ctx context.Context, args []string) (err error) {
 }
 
 func palette(res pkg.Resources, pres pkg.Resources, ai pkg.AnimeInfo) (p color.Palette, err error) {
-	if _, ok := pres.GraphicMapIndex[ai.ID]; ok {
-		var pg *pkg.Graphic
-		if pg, err = pres.GraphicMapIndex[ai.ID].LoadGraphic(pres.GraphicFile); err != nil {
-			return nil, err
-		}
+	// use hidden palette
+	if len(pres.GraphicMapIndex) > 0 {
+		if _, ok := pres.GraphicMapIndex[ai.ID]; ok {
+			var pg *pkg.Graphic
+			if pg, err = pres.GraphicMapIndex[ai.ID].LoadGraphic(pres.GraphicFile); err != nil {
+				return nil, err
+			}
 
-		return pg.PaletteData, nil
-	} else {
-		log.Debug().Msgf("hidden palette not found: %+v", ai)
+			return pg.PaletteData, nil
+		} else {
+			log.Debug().Msgf("hidden palette not found: %+v", ai)
+		}
 	}
 
+	// use cgp palette
 	if len(res.Palette) > 0 {
 		return res.Palette, nil
 	}
