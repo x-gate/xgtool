@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	gif2 "image/gif"
 	"io"
 	"os"
@@ -36,158 +35,6 @@ func TestMakeAnimeIndex(t *testing.T) {
 
 			if len(res.AnimeInfoIndex) != tc.expected {
 				t.Errorf("expected len(index): %d, got %d", tc.expected, len(res.AnimeInfoIndex))
-			}
-		})
-	}
-}
-
-func TestAnimeInfo_LoadAnime(t *testing.T) {
-	testcases := []struct {
-		infoName        string
-		animeName       string
-		graphicInfoName string
-		graphicName     string
-		expectHeader    animeHeader
-	}{
-		{
-			infoName:        "../testdata/anime_info/AnimeInfo_4.bin",
-			animeName:       "../testdata/anime/Anime_4.bin",
-			graphicInfoName: "../testdata/graphic_info/GraphicInfo_66.bin",
-			graphicName:     "../testdata/graphic/Graphic_66.bin",
-			expectHeader: animeHeader{
-				Direct:   0,
-				Action:   5,
-				Duration: 1500,
-				FrameCnt: 26,
-			},
-		},
-		{
-			infoName:        "../testdata/anime_info/AnimeInfoEx_1.bin",
-			animeName:       "../testdata/anime/AnimeEx_1.bin",
-			graphicInfoName: "../testdata/graphic_info/GraphicInfoEx_5.bin",
-			graphicName:     "../testdata/graphic/GraphicEx_5.bin",
-			expectHeader: animeHeader{
-				Direct:   0,
-				Action:   5,
-				Duration: 1000,
-				FrameCnt: 8,
-			},
-		},
-		{
-			infoName:        "../testdata/anime_info/AnimeInfoV3_8.bin",
-			animeName:       "../testdata/anime/AnimeV3_8.bin",
-			graphicInfoName: "../testdata/graphic_info/GraphicInfoV3_19.bin",
-			graphicName:     "../testdata/graphic/GraphicV3_19.bin",
-			expectHeader: animeHeader{
-				Direct:   0,
-				Action:   5,
-				Duration: 700,
-				FrameCnt: 10,
-				Reversed: 4,
-				Sentinel: -1,
-			},
-		},
-		{
-			infoName:        "../testdata/anime_info/AnimeInfo_PUK2_4.bin",
-			animeName:       "../testdata/anime/Anime_PUK2_4.bin",
-			graphicInfoName: "../testdata/graphic_info/GraphicInfo_PUK2_2.bin",
-			graphicName:     "../testdata/graphic/Graphic_PUK2_2.bin",
-			expectHeader: animeHeader{
-				Direct:   0,
-				Action:   5,
-				Duration: 1200,
-				FrameCnt: 22,
-				Reversed: 0,
-				Sentinel: -1,
-			},
-		},
-		{
-			infoName:        "../testdata/anime_info/AnimeInfo_PUK3_2.bin",
-			animeName:       "../testdata/anime/Anime_PUK3_2.bin",
-			graphicInfoName: "../testdata/graphic_info/GraphicInfo_PUK3_1.bin",
-			graphicName:     "../testdata/graphic/Graphic_PUK3_1.bin",
-			expectHeader: animeHeader{
-				Direct:   0,
-				Action:   0,
-				Duration: 700,
-				FrameCnt: 21,
-				Reversed: 0,
-				Sentinel: -1,
-			},
-		},
-		{
-			infoName:        "../testdata/anime_info/AnimeInfo_Joy_91.bin",
-			animeName:       "../testdata/anime/Anime_Joy_91.bin",
-			graphicInfoName: "../testdata/graphic_info/GraphicInfo_Joy_125.bin",
-			graphicName:     "../testdata/graphic/Graphic_Joy_125.bin",
-			expectHeader: animeHeader{
-				Direct:   0,
-				Action:   0,
-				Duration: 2000,
-				FrameCnt: 17,
-				Reversed: 0,
-				Sentinel: -1,
-			},
-		},
-		{
-			infoName:        "../testdata/anime_info/AnimeInfo_Joy_CH1.Bin",
-			animeName:       "../testdata/anime/Anime_Joy_CH1.bin",
-			graphicInfoName: "../testdata/graphic_info/GraphicInfo_Joy_CH1.bin",
-			graphicName:     "../testdata/graphic/Graphic_Joy_CH1.bin",
-			expectHeader: animeHeader{
-				Direct:   0,
-				Action:   5,
-				Duration: 1000,
-				FrameCnt: 8,
-				Reversed: 0,
-				Sentinel: -1,
-			},
-		},
-		{
-			infoName:        "../testdata/anime_info/AnimeInfo_Joy_EX_146.bin",
-			animeName:       "../testdata/anime/Anime_Joy_EX_146.bin",
-			graphicInfoName: "../testdata/graphic_info/GraphicInfo_Joy_EX_152.bin",
-			graphicName:     "../testdata/graphic/Graphic_Joy_EX_152.bin",
-			expectHeader: animeHeader{
-				Direct:   0,
-				Action:   5,
-				Duration: 1000,
-				FrameCnt: 8,
-				Reversed: 0,
-				Sentinel: -1,
-			},
-		},
-	}
-
-	for _, tc := range testcases {
-		t.Run(tc.animeName, func(t *testing.T) {
-			res := Resources{}
-			defer res.Close()
-
-			var err error
-
-			err = res.OpenAnimeInfo(tc.infoName)
-			skipIfNotExists(tc.infoName, err, t)
-			err = res.OpenAnime(tc.animeName)
-			skipIfNotExists(tc.animeName, err, t)
-			err = res.OpenGraphicInfo(tc.graphicInfoName)
-			skipIfNotExists(tc.graphicInfoName, err, t)
-			err = res.OpenGraphic(tc.graphicName)
-			skipIfNotExists(tc.graphicName, err, t)
-
-			ai, err := readAnimeInfo(res.AnimeInfoFile)
-
-			a, err := ai.LoadAnime(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if diff := cmp.Diff(tc.expectHeader, a.Header); diff != "" {
-				t.Errorf("anime header mismatch (-want +got):\n%s", diff)
-			}
-
-			if len(a.Frames) != int(a.Header.FrameCnt) {
-				t.Errorf("expected len(a.Frames): %d, got %d", a.Header.FrameCnt, len(a.Frames))
 			}
 		})
 	}
@@ -386,20 +233,20 @@ func TestAnime_GIF_1(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			a, err := ai.LoadAnime(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
+			a, err := ai.LoadAllAnimes(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			img, err := a.GIF(res.Palette)
+			img, err := a[0].GIF(res.Palette)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			t.Logf("%+v", img)
 
-			if len(img.Image) != int(a.Header.FrameCnt) {
-				t.Errorf("expected len(img.Image): %d, got %d", a.Header.FrameCnt, len(img.Image))
+			if len(img.Image) != int(a[0].Header.FrameCnt) {
+				t.Errorf("expected len(img.Image): %d, got %d", a[0].Header.FrameCnt, len(img.Image))
 			}
 
 			out, err := os.OpenFile(fmt.Sprintf("../output/%s.gif", tc.name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
@@ -501,7 +348,7 @@ func TestAnime_GIF_2(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			a, err := ai.LoadAnime(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
+			a, err := ai.LoadAllAnimes(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -514,13 +361,13 @@ func TestAnime_GIF_2(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			img, err := a.GIF(pg.PaletteData)
+			img, err := a[0].GIF(pg.PaletteData)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if len(img.Image) != int(a.Header.FrameCnt) {
-				t.Errorf("expected len(img.Image): %d, got %d", a.Header.FrameCnt, len(img.Image))
+			if len(img.Image) != int(a[0].Header.FrameCnt) {
+				t.Errorf("expected len(img.Image): %d, got %d", a[0].Header.FrameCnt, len(img.Image))
 			}
 
 			out, err := os.OpenFile(fmt.Sprintf("../output/%s.gif", tc.name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)

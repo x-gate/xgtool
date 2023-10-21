@@ -124,28 +124,32 @@ func palette(res pkg.Resources, pres pkg.Resources, ai pkg.AnimeInfo) (p color.P
 }
 
 func dumpAnime(ai pkg.AnimeInfo, af *os.File, idx pkg.GraphicInfoIndex, gf *os.File, p color.Palette) (err error) {
-	var a *pkg.Anime
-	if a, err = ai.LoadAnime(af, idx, gf); err != nil {
+	var animes []*pkg.Anime
+	if animes, err = ai.LoadAllAnimes(af, idx, gf); err != nil {
 		return
 	}
 
-	var img *gif.GIF
-	if img, err = a.GIF(p); err != nil {
-		log.Err(err).Send()
-		return
+	for i, a := range animes {
+		var img *gif.GIF
+		if img, err = a.GIF(p); err != nil {
+			log.Err(err).Send()
+			return
+		}
+
+		var out *os.File
+		if f.dr {
+			out, err = os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
+		} else {
+			out, err = os.OpenFile(fmt.Sprintf("%s/%d-%d.gif", filepath.Clean(f.outdir), ai.ID, i), os.O_WRONLY|os.O_CREATE, 0644)
+		}
+		if err != nil {
+			return
+		}
+
+		if err = gif.EncodeAll(out, img); err != nil {
+			return
+		}
 	}
 
-	var out *os.File
-	if f.dr {
-		out, err = os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
-	} else {
-		out, err = os.OpenFile(fmt.Sprintf("%s/%d.gif", filepath.Clean(f.outdir), ai.ID), os.O_WRONLY|os.O_CREATE, 0644)
-	}
-	if err != nil {
-		return
-	}
-
-	err = gif.EncodeAll(out, img)
-
-	return nil
+	return
 }

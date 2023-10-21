@@ -105,51 +105,6 @@ func (ai AnimeInfo) LoadAllAnimes(af *os.File, idx GraphicInfoIndex, gf io.ReadS
 	return
 }
 
-// LoadAnime loads anime data from anime file.
-func (ai AnimeInfo) LoadAnime(af *os.File, idx GraphicInfoIndex, gf io.ReadSeeker) (a *Anime, err error) {
-	a = new(Anime)
-	a.Info = ai
-
-	a.Header, err = ai.parseHeader(af)
-
-	buf := bytes.NewBuffer(make([]byte, 10*a.Header.FrameCnt))
-	if _, err = io.ReadFull(af, buf.Bytes()); err != nil {
-		return
-	}
-
-	for i := 0; i < int(a.Header.FrameCnt); i++ {
-		var frame animeFrame
-		if err = binary.Read(buf, binary.LittleEndian, &frame); err != nil {
-			return
-		}
-
-		var g *Graphic
-		if g, err = idx[frame.GraphicID].LoadGraphic(gf); err != nil {
-			return
-		}
-
-		a.Frames = append(a.Frames, frame)
-		a.Graphic = append(a.Graphic, g)
-	}
-
-	return
-}
-
-func (ai AnimeInfo) parseHeader(af *os.File) (h animeHeader, err error) {
-	h, err = ai.readAnimeHeader(af, 20)
-	if err != nil {
-		return
-	}
-
-	// check if this anime header is extended or not
-	// h.Sentinel will be -1 if it's extended
-	if h.Sentinel == -1 {
-		return
-	}
-
-	return ai.readAnimeHeader(af, 12)
-}
-
 func (ai AnimeInfo) readAnimeHeader(af *os.File, len int) (h animeHeader, err error) {
 	buf := bytes.NewBuffer(make([]byte, len))
 	if _, err = io.ReadFull(af, buf.Bytes()); err != nil {
@@ -231,6 +186,8 @@ func getHeaderSize(af *os.File) (sz int) {
 
 	h := *(*animeHeader)(unsafe.Pointer(&buf.Bytes()[0]))
 
+	// check if this anime header is extended or not
+	// h.Sentinel will be -1 if it's extended
 	if h.Sentinel == -1 {
 		return 20
 	}
