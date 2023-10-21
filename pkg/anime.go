@@ -75,6 +75,36 @@ func MakeAnimeInfoIndex(src io.Reader) (AnimeInfoIndex, error) {
 	return index, nil
 }
 
+// LoadAllAnimes loads all animes (with all directions and actions) from anime file.
+func (ai AnimeInfo) LoadAllAnimes(af *os.File, idx GraphicInfoIndex, gf io.ReadSeeker) (animes []*Anime, err error) {
+	animes = make([]*Anime, 0, ai.ActCnt)
+
+	if _, err = af.Seek(int64(ai.Addr), io.SeekStart); err != nil {
+		return
+	}
+
+	headerSize := getHeaderSize(af)
+
+	if _, err = af.Seek(int64(ai.Addr), io.SeekStart); err != nil {
+		return
+	}
+
+	for i := 0; i < int(ai.ActCnt); i++ {
+		a := new(Anime)
+
+		if a.Header, err = ai.readAnimeHeader(af, headerSize); err != nil {
+			return
+		}
+		if a.Frames, a.Graphic, err = ai.readAnimeFrames(af, int(a.Header.FrameCnt), idx, gf); err != nil {
+			return
+		}
+
+		animes = append(animes, a)
+	}
+
+	return
+}
+
 // LoadAnime loads anime data from anime file.
 func (ai AnimeInfo) LoadAnime(af *os.File, idx GraphicInfoIndex, gf io.ReadSeeker) (a *Anime, err error) {
 	a = new(Anime)
@@ -121,10 +151,6 @@ func (ai AnimeInfo) parseHeader(af *os.File) (h animeHeader, err error) {
 }
 
 func (ai AnimeInfo) readAnimeHeader(af *os.File, len int) (h animeHeader, err error) {
-	if _, err = af.Seek(int64(ai.Addr), io.SeekStart); err != nil {
-		return
-	}
-
 	buf := bytes.NewBuffer(make([]byte, len))
 	if _, err = io.ReadFull(af, buf.Bytes()); err != nil {
 		return
@@ -134,6 +160,33 @@ func (ai AnimeInfo) readAnimeHeader(af *os.File, len int) (h animeHeader, err er
 	if len == 12 {
 		h.Reversed = 0
 		h.Sentinel = 0
+	}
+
+	return
+}
+
+func (ai AnimeInfo) readAnimeFrames(af *os.File, cnt int, idx GraphicInfoIndex, gf io.ReadSeeker) (f []animeFrame, g []*Graphic, err error) {
+	f = make([]animeFrame, 0, cnt)
+	g = make([]*Graphic, 0, cnt)
+
+	buf := bytes.NewBuffer(make([]byte, 10*cnt))
+	if _, err = io.ReadFull(af, buf.Bytes()); err != nil {
+		return
+	}
+
+	for i := 0; i < cnt; i++ {
+		var frame animeFrame
+		if err = binary.Read(buf, binary.LittleEndian, &frame); err != nil {
+			return
+		}
+
+		var graphic *Graphic
+		if graphic, err = idx[frame.GraphicID].LoadGraphic(gf); err != nil {
+			return
+		}
+
+		f = append(f, frame)
+		g = append(g, graphic)
 	}
 
 	return
@@ -168,4 +221,19 @@ func (a Anime) GIF(p color.Palette) (img *gif.GIF, err error) {
 	}
 
 	return
+}
+
+func getHeaderSize(af *os.File) (sz int) {
+	buf := bytes.NewBuffer(make([]byte, 20))
+	if _, err := io.ReadFull(af, buf.Bytes()); err != nil {
+		return
+	}
+
+	h := *(*animeHeader)(unsafe.Pointer(&buf.Bytes()[0]))
+
+	if h.Sentinel == -1 {
+		return 20
+	}
+
+	return 12
 }

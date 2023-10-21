@@ -193,6 +193,141 @@ func TestAnimeInfo_LoadAnime(t *testing.T) {
 	}
 }
 
+func TestAnimeInfo_LoadAllAnimes(t *testing.T) {
+	testcases := []struct {
+		name string
+		aif  string
+		af   string
+		gif  string
+		gf   string
+	}{
+		{
+			name: "AnimeInfo_4.bin",
+			aif:  "../testdata/anime_info/AnimeInfo_4.bin",
+			af:   "../testdata/anime/Anime_4.bin",
+			gif:  "../testdata/graphic_info/GraphicInfo_66.bin",
+			gf:   "../testdata/graphic/Graphic_66.bin",
+		},
+		{
+			name: "AnimeInfoEx_1.bin",
+			aif:  "../testdata/anime_info/AnimeInfoEx_1.Bin",
+			af:   "../testdata/anime/AnimeEx_1.Bin",
+			gif:  "../testdata/graphic_info/GraphicInfoEx_5.bin",
+			gf:   "../testdata/graphic/GraphicEx_5.bin",
+		},
+		{
+			name: "AnimeInfoV3_8.bin",
+			aif:  "../testdata/anime_info/AnimeInfoV3_8.bin",
+			af:   "../testdata/anime/AnimeV3_8.bin",
+			gif:  "../testdata/graphic_info/GraphicInfoV3_19.bin",
+			gf:   "../testdata/graphic/GraphicV3_19.bin",
+		},
+		{
+			name: "AnimeInfo_PUK2_4.bin",
+			aif:  "../testdata/anime_info/AnimeInfo_PUK2_4.bin",
+			af:   "../testdata/anime/Anime_PUK2_4.bin",
+			gif:  "../testdata/graphic_info/GraphicInfo_PUK2_2.bin",
+			gf:   "../testdata/graphic/Graphic_PUK2_2.bin",
+		},
+		{
+			name: "AnimeInfo_PUK3_2.bin",
+			aif:  "../testdata/anime_info/AnimeInfo_PUK3_2.bin",
+			af:   "../testdata/anime/Anime_PUK3_2.bin",
+			gif:  "../testdata/graphic_info/GraphicInfo_PUK3_1.bin",
+			gf:   "../testdata/graphic/Graphic_PUK3_1.bin",
+		},
+		{
+			name: "AnimeInfo_Joy_91.bin",
+			aif:  "../testdata/anime_info/AnimeInfo_Joy_91.bin",
+			af:   "../testdata/anime/Anime_Joy_91.bin",
+			gif:  "../testdata/graphic_info/GraphicInfo_Joy_125.bin",
+			gf:   "../testdata/graphic/Graphic_Joy_125.bin",
+		},
+		{
+			name: "AnimeInfo_Joy_CH1.bin",
+			aif:  "../testdata/anime_info/AnimeInfo_Joy_CH1.Bin",
+			af:   "../testdata/anime/Anime_Joy_CH1.Bin",
+			gif:  "../testdata/graphic_info/GraphicInfo_Joy_CH1.bin",
+			gf:   "../testdata/graphic/Graphic_Joy_CH1.bin",
+		},
+		{
+			name: "AnimeInfo_Joy_EX_146.bin",
+			aif:  "../testdata/anime_info/AnimeInfo_Joy_EX_146.bin",
+			af:   "../testdata/anime/Anime_Joy_EX_146.bin",
+			gif:  "../testdata/graphic_info/GraphicInfo_Joy_EX_152.bin",
+			gf:   "../testdata/graphic/Graphic_Joy_EX_152.bin",
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			res := Resources{}
+			defer res.Close()
+
+			if err := res.OpenAnimeInfo(tc.aif); err != nil {
+				t.Fatal(err)
+			}
+			if err := res.OpenAnime(tc.af); err != nil {
+				t.Fatal(err)
+			}
+			if err := res.OpenGraphicInfo(tc.gif); err != nil {
+				t.Fatal(err)
+			}
+			if err := res.OpenGraphic(tc.gf); err != nil {
+				t.Fatal(err)
+			}
+
+			var ai AnimeInfo
+			for _, ai = range res.AnimeInfoIndex {
+				break
+			}
+
+			animes, err := ai.LoadAllAnimes(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
+			if err != nil {
+				t.Logf("%+v", ai)
+				t.Fatal(err)
+			}
+
+			if len(animes) != int(ai.ActCnt) {
+				t.Errorf("expected len(animes): %d, got %d", ai.ActCnt, len(animes))
+			}
+		})
+	}
+
+	res := Resources{}
+	defer res.Close()
+
+	if err := res.OpenAnimeInfo("../testdata/anime_info/AnimeInfo_4.bin"); err != nil {
+		t.Fatal(err)
+	}
+	if err := res.OpenAnime("../testdata/anime/Anime_4.bin"); err != nil {
+		t.Fatal(err)
+	}
+	if err := res.OpenGraphicInfo("../testdata/graphic_info/GraphicInfo_66.bin"); err != nil {
+		t.Fatal(err)
+	}
+	if err := res.OpenGraphic("../testdata/graphic/Graphic_66.bin"); err != nil {
+		t.Fatal(err)
+	}
+	if err := res.OpenPalette("../testdata/palette/palet_00.cgp"); err != nil {
+		t.Fatal(err)
+	}
+
+	var ai AnimeInfo
+	for _, ai = range res.AnimeInfoIndex {
+		break
+	}
+
+	animes, err := ai.LoadAllAnimes(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(animes) != int(ai.ActCnt) {
+		t.Errorf("expected len(animes): %d, got %d", ai.ActCnt, len(animes))
+	}
+}
+
 func TestAnime_GIF_1(t *testing.T) {
 	testcases := []struct {
 		name        string
