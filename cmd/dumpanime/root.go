@@ -92,7 +92,7 @@ func DumpAnime(ctx context.Context, args []string) (err error) {
 			return
 		}
 		if err = dumpAnime(ai, res.AnimeFile, res.GraphicIDIndex, res.GraphicFile, p); err != nil {
-			//return
+			log.Err(err).Send()
 		}
 		_ = bar.Add(1)
 	}
@@ -108,6 +108,8 @@ func palette(res pkg.Resources, pres pkg.Resources, ai pkg.AnimeInfo) (p color.P
 		}
 
 		return pg.PaletteData, nil
+	} else {
+		log.Debug().Msgf("hidden palette not found: %+v", ai)
 	}
 
 	if len(res.Palette) > 0 {

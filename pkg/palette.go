@@ -10,9 +10,6 @@ import (
 // CGPSize reads bytes from CGP file, (256 colors - 32 default colors) * 3 bytes per color.
 const CGPSize = (256 - 32) * 3
 
-// Transparent is a color.RGBA with all fields set to 0.
-var Transparent = color.RGBA{}
-
 var prefix = [...]color.Color{
 	color.RGBA{B: 0x00, G: 0x00, R: 0x00, A: 0x00}, // RGB(0, 0, 0) is a transparent color for CrossGate, set Alpha to 0 for transparent.
 	color.RGBA{B: 0x00, G: 0x00, R: 0x80, A: 0xff},
@@ -74,8 +71,11 @@ func NewPaletteFromBytes(b []byte) (p color.Palette, err error) {
 	tmp := make([]byte, 3)
 
 	for _, err = io.ReadFull(buf, tmp); err == nil; _, err = io.ReadFull(buf, tmp) {
-		if tmp[0] == 0 && tmp[1] == 0 && tmp[2] == 0 {
-			p = append(p, Transparent)
+		if (tmp[0] == 0 && tmp[1] == 0 && tmp[2] == 0) ||
+			(tmp[0] == 0xff && tmp[1] == 0 && tmp[2] == 0) ||
+			(tmp[0] == 0 && tmp[1] == 0xff && tmp[2] == 0) ||
+			(tmp[0] == 0 && tmp[1] == 0 && tmp[2] == 0xff) {
+			p = append(p, color.Transparent)
 		} else {
 			p = append(p, color.RGBA{B: tmp[0], G: tmp[1], R: tmp[2], A: 0xff})
 		}
