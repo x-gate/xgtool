@@ -3,13 +3,14 @@ package mediaserver
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 	"image"
 	"image/gif"
 	"image/png"
 	"io"
 	"xgtool/pkg"
+
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 var errInvalidVersion = errors.New("invalid version")

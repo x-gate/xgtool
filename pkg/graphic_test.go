@@ -297,6 +297,44 @@ func TestGraphic_Img(t *testing.T) {
 	}
 }
 
+func BenchmarkGraphic_ImgRGBA(b *testing.B) {
+	res := Resources{}
+	defer res.Close()
+
+	_ = res.OpenGraphicInfo("../testdata/graphic_info/GraphicInfo_66.bin")
+	_ = res.OpenGraphic("../testdata/graphic/Graphic_66.bin")
+
+	gi, _ := readGraphicInfo(res.GraphicInfoFile)
+	g, _ := gi.LoadGraphic(res.GraphicFile)
+
+	_ = res.OpenPalette("../testdata/palette/palet_00.cgp")
+	g.SetPalette(res.Palette)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = g.ImgRGBA()
+	}
+}
+
+func BenchmarkGraphic_ImgPaletted(b *testing.B) {
+	res := Resources{}
+	defer res.Close()
+
+	_ = res.OpenGraphicInfo("../testdata/graphic_info/GraphicInfo_66.bin")
+	_ = res.OpenGraphic("../testdata/graphic/Graphic_66.bin")
+
+	gi, _ := readGraphicInfo(res.GraphicInfoFile)
+	g, _ := gi.LoadGraphic(res.GraphicFile)
+
+	_ = res.OpenPalette("../testdata/palette/palet_00.cgp")
+	g.SetPalette(res.Palette)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = g.ImgPaletted()
+	}
+}
+
 func readGraphicInfo(f *os.File) (gi GraphicInfo, err error) {
 	buf := bytes.NewBuffer(make([]byte, 40))
 
