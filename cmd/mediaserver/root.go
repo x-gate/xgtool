@@ -17,6 +17,8 @@ func MediaServer(ctx context.Context, args []string) error {
 	r := gin.Default()
 
 	r.GET("/ping", ping)
+	r.GET("/graphic/:version", dumpGraphic)
+	r.GET("/anime/:version", dumpAnime)
 
 	srv := &http.Server{
 		Addr:    ":8080",
