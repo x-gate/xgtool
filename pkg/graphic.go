@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/draw"
 	"io"
 	"xgtool/internal"
 )
@@ -168,33 +167,32 @@ func (g *Graphic) ImgRGBA() (img *image.RGBA, err error) {
 	}
 
 	img = image.NewRGBA(image.Rect(0, 0, int(g.Info.Width), int(g.Info.Height)))
-	err = g.setPixel(img)
+
+	w := int(g.Info.Width)
+	h := int(g.Info.Height)
+	for i, pix := range g.GraphicData {
+		if int(pix) >= len(g.PaletteData) {
+			return nil, fmt.Errorf("%w: info=%+v, header=%+v, g.GraphicData[i]=%d, len(g.PaletteData)=%d", ErrRenderFailed, g.Info, g.Header, pix, len(g.PaletteData))
+		}
+		img.Set(i%w, h-i/w, g.PaletteData[pix])
+	}
 
 	return
 }
 
 // ImgPaletted convert graphic data to image.Paletted
-//
-// Note: ImgPaletted is slower (x4 or more) than ImgRGBA, because it needs to index the palette data when set pixels.
 func (g *Graphic) ImgPaletted() (img *image.Paletted, err error) {
 	if len(g.PaletteData) == 0 {
 		return nil, ErrEmptyPalette
 	}
 
 	img = image.NewPaletted(image.Rect(0, 0, int(g.Info.Width), int(g.Info.Height)), g.PaletteData)
-	err = g.setPixel(img)
 
-	return
-}
-
-func (g *Graphic) setPixel(img image.Image) (err error) {
 	w := int(g.Info.Width)
 	h := int(g.Info.Height)
 	for i, pix := range g.GraphicData {
-		if int(pix) >= len(g.PaletteData) {
-			return fmt.Errorf("%w: info=%+v, header=%+v, g.GraphicData[i]=%d, len(g.PaletteData)=%d", ErrRenderFailed, g.Info, g.Header, pix, len(g.PaletteData))
-		}
-		img.(draw.Image).Set(i%w, h-i/w, g.PaletteData[pix])
+		img.PixOffset(i%w, h-i/w-1)
+		img.Pix[i] = pix
 	}
 
 	return
