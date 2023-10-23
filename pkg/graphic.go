@@ -166,10 +166,10 @@ func (g *Graphic) ImgRGBA() (img *image.RGBA, err error) {
 		return nil, ErrEmptyPalette
 	}
 
-	img = image.NewRGBA(image.Rect(0, 0, int(g.Info.Width), int(g.Info.Height)))
-
 	w := int(g.Info.Width)
 	h := int(g.Info.Height)
+	img = image.NewRGBA(image.Rect(0, 0, w, h))
+
 	for i, pix := range g.GraphicData {
 		if int(pix) >= len(g.PaletteData) {
 			return nil, fmt.Errorf("%w: info=%+v, header=%+v, g.GraphicData[i]=%d, len(g.PaletteData)=%d", ErrRenderFailed, g.Info, g.Header, pix, len(g.PaletteData))
@@ -186,13 +186,22 @@ func (g *Graphic) ImgPaletted() (img *image.Paletted, err error) {
 		return nil, ErrEmptyPalette
 	}
 
-	img = image.NewPaletted(image.Rect(0, 0, int(g.Info.Width), int(g.Info.Height)), g.PaletteData)
-
 	w := int(g.Info.Width)
 	h := int(g.Info.Height)
+	r := image.Rect(0, 0, w, h)
+	img = image.NewPaletted(r, g.PaletteData)
+
 	for i, pix := range g.GraphicData {
-		img.PixOffset(i%w, h-i/w-1)
-		img.Pix[i] = pix
+		// The code is based on image.Paletted.Set() from go standard library.
+		// The implementation is very slow because it calls p.Palette.Index(c) for each pixel, but it's not necessary.
+		//
+		// Ref: https://cs.opensource.google/go/go/+/refs/tags/go1.21.3:src/image/image.go;l=1188
+		if !(image.Point{X: i % w, Y: h - i/w}.In(r)) {
+			continue
+		}
+		j := img.PixOffset(i%w, h-i/w)
+
+		img.Pix[j] = pix
 	}
 
 	return
