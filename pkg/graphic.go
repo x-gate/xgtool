@@ -188,14 +188,12 @@ func (g *Graphic) ImgPaletted() (img *image.Paletted, err error) {
 }
 
 func (g *Graphic) setPixel(img image.Image) (err error) {
+	w := int(g.Info.Width)
+	h := int(g.Info.Height)
 	for i, pix := range g.GraphicData {
-		w := int(g.Info.Width)
-		h := int(g.Info.Height)
-
 		if int(pix) >= len(g.PaletteData) {
 			return fmt.Errorf("%w: info=%+v, header=%+v, g.GraphicData[i]=%d, len(g.PaletteData)=%d", ErrRenderFailed, g.Info, g.Header, pix, len(g.PaletteData))
 		}
-
 		img.(draw.Image).Set(i%w, h-i/w, g.PaletteData[pix])
 	}
 
