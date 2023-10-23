@@ -51,6 +51,7 @@ var (
 	f   flags
 )
 
+// DumpAnime the entrypoint of "dump-anime" command
 func DumpAnime(ctx context.Context, args []string) (err error) {
 	if err = f.Flags().Parse(args); err != nil {
 		return

@@ -3,13 +3,15 @@ package mediaserver
 import (
 	"context"
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
 	"os/signal"
+
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
+// MediaServer the entrypoint of "media-server" command
 func MediaServer(ctx context.Context, args []string) error {
 	openVersionResources()
 	defer closeVersionResources()
