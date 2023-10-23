@@ -4,6 +4,7 @@ import (
 	"xgtool/cmd/convertmap"
 	"xgtool/cmd/dumpanime"
 	"xgtool/cmd/dumpgraphic"
+	"xgtool/cmd/mediaserver"
 
 	"github.com/cristalhq/acmd"
 )
@@ -27,6 +28,11 @@ func main() {
 			Name:        "convert-map",
 			Description: "Convert map into TMX format",
 			ExecFunc:    convertmap.ConvertMap,
+		},
+		{
+			Name:        "media-server",
+			Description: "Start a media HTTP server to serve graphic and anime files",
+			ExecFunc:    mediaserver.MediaServer,
 		},
 	}
 
