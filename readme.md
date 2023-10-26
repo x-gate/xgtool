@@ -2,6 +2,12 @@
 
 The toolchain of x-gate, maybe works with CrossGate(?).
 
+## Demo
+
+![職業介紹所](./assets/map-1091.png)
+![法蘭城](./assets/map-1000.png)
+![芙蕾雅島](./assets/map-100.png)
+
 ## Available Tools
 
 ### Dump Graphic
