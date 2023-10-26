@@ -28,36 +28,36 @@ const (
 
 // Layer presents layers in a map, including tile layers, object groups, image layers and groups.
 type Layer struct {
-	Chunks           []Chunk    `json:"chunks,omitempty"`           // Array of chunks (optional). TileLayer only.
-	Class            string     `json:"class,omitempty"`            // The class of the layer (since 1.9, optional)
-	Compression      string     `json:"compression,omitempty"`      // `zlib`, `gzip`, `zstd` (since Tiled 1.3) or empty (default). TileLayer only.
-	Data             []uint     `json:"data,omitempty"`             // Array of unsigned int (GIDs) or base64-encoded data. TileLayer only.
-	DrawOrder        DrawOrder  `json:"draworder,omitempty"`        // TopDown (default) or index. ObjectGroup only.
-	Encoding         Encoding   `json:"encoding,omitempty"`         // CSV (default) or Base64. TileLayer only.
-	Height           int        `json:"height,omitempty"`           // Row count. Same as map height for fixed-size maps. TileLayer only.
-	ID               int        `json:"id"`                         // Incremental ID - unique across all layers
-	Image            string     `json:"image,omitempty"`            // Image used by this layer. ImageLayer only.
-	Layers           []Layer    `json:"layers,omitempty"`           // Array of Layer. Group only.
-	Locked           bool       `json:"locked,omitempty"`           // Whether layer is locked in the editor (default: false). (since Tiled 1.8.2)
-	Name             string     `json:"name"`                       // Name assigned to this layer
-	Objects          []Object   `json:"objects,omitempty"`          // Array of objects. ObjectGroup only.
-	OffsetX          float64    `json:"offsetx,omitempty"`          // Horizontal layer offset in pixels (default: 0)
-	OffsetY          float64    `json:"offsety,omitempty"`          // Vertical layer offset in pixels (default: 0)
-	Opacity          float64    `json:"opacity"`                    // Value between 0 and 1
-	ParallaxX        float64    `json:"parallaxx,omitempty"`        // Horizontal parallax factor for this layer (default: 1). (since Tiled 1.5)
-	ParallaxY        float64    `json:"parallaxy,omitempty"`        // Vertical parallax factor for this layer (default: 1). (since Tiled 1.5)
-	Properties       []Property `json:"properties,omitempty"`       // Array of Property
-	RepeatX          bool       `json:"repeatx,omitempty"`          // Whether the image drawn by this layer is repeated along the X axis. ImageLayer only. (since Tiled 1.8)
-	RepeatY          bool       `json:"repeaty,omitempty"`          // Whether the image drawn by this layer is repeated along the Y axis. ImageLayer only. (since Tiled 1.8)
-	StartX           int        `json:"startx,omitempty"`           // X coordinate where layer content starts (for infinite maps)
-	StartY           int        `json:"starty,omitempty"`           // Y coordinate where layer content starts (for infinite maps)
-	TintColor        string     `json:"tintcolor,omitempty"`        // Hex-formatted [tint color](https://doc.mapeditor.org/en/stable/manual/layers/#tint-color) (#RRGGBB or #AARRGGBB) that is multiplied with any graphics drawn by this layer or any child layers (optional).
-	TransParentColor string     `json:"transparentcolor,omitempty"` // Hex-formatted color (#RRGGBB) (optional). ImageLayer only.
-	Type             LayerType  `json:"type"`                       // TileLayer, ObjectGroup, ImageLayer or Group
-	Visible          bool       `json:"visible"`                    // Whether layer is shown or hidden in editor
-	Width            int        `json:"width,omitempty"`            // Column count. Same as map width for fixed-size maps. TileLayer only.
-	X                int        `json:"x"`                          // Horizontal layer offset in tiles. Always 0.
-	Y                int        `json:"y"`                          // Vertical layer offset in tiles. Always 0.
+	Chunks           []Chunk    `json:"chunks,omitempty"`                              // Array of chunks (optional). TileLayer only.
+	Class            string     `json:"class,omitempty" xml:"class,omitempty"`         // The class of the layer (since 1.9, defaults to “”).
+	Compression      string     `json:"compression,omitempty"`                         // `zlib`, `gzip`, `zstd` (since Tiled 1.3) or empty (default). TileLayer only.
+	Data             []uint     `json:"data,omitempty"`                                // Array of unsigned int (GIDs) or base64-encoded data. TileLayer only.
+	DrawOrder        DrawOrder  `json:"draworder,omitempty"`                           // TopDown (default) or index. ObjectGroup only.
+	Encoding         Encoding   `json:"encoding,omitempty"`                            // CSV (default) or Base64. TileLayer only.
+	Height           int        `json:"height,omitempty" xml:"height,omitempty"`       // The height of the layer in tiles. Always the same as the map height for fixed-size maps.
+	ID               int        `json:"id" xml:"id"`                                   // Unique ID of the layer (defaults to 0, with valid IDs being at least 1). Each layer that added to a map gets a unique id. Even if a layer is deleted, no layer ever gets the same ID. Can not be changed in Tiled. (since Tiled 1.2)
+	Image            string     `json:"image,omitempty"`                               // Image used by this layer. ImageLayer only.
+	Layers           []Layer    `json:"layers,omitempty"`                              // Array of Layer. Group only.
+	Locked           bool       `json:"locked,omitempty"`                              // Whether layer is locked in the editor (default: false). (since Tiled 1.8.2)
+	Objects          []Object   `json:"objects,omitempty"`                             // Array of objects. ObjectGroup only.
+	Name             string     `json:"name,omitempty" xml:"name,omitempty"`           // The name of the layer. (defaults to “”)
+	OffsetX          float64    `json:"offsetx,omitempty" xml:"offsetx,omitempty"`     // Horizontal offset for this layer in pixels. Defaults to 0. (since 0.14)
+	OffsetY          float64    `json:"offsety,omitempty" xml:"offsety,omitempty"`     // Vertical offset for this layer in pixels. Defaults to 0. (since 0.14)
+	Opacity          float64    `json:"opacity,omitempty" xml:"opacity,omitempty"`     // The opacity of the layer as a value from 0 to 1. Defaults to 1.
+	ParallaxX        float64    `json:"parallaxx,omitempty" xml:"parallaxx,omitempty"` // Horizontal parallax factor for this layer. Defaults to 1. (since 1.5)
+	ParallaxY        float64    `json:"parallaxy,omitempty" xml:"parallaxy,omitempty"` // Vertical parallax factor for this layer. Defaults to 1. (since 1.5)
+	Properties       []Property `json:"properties,omitempty" xml:"property,omitempty"` // Array of Property
+	RepeatX          bool       `json:"repeatx,omitempty"`                             // Whether the image drawn by this layer is repeated along the X axis. ImageLayer only. (since Tiled 1.8)
+	RepeatY          bool       `json:"repeaty,omitempty"`                             // Whether the image drawn by this layer is repeated along the Y axis. ImageLayer only. (since Tiled 1.8)
+	StartX           int        `json:"startx,omitempty"`                              // X coordinate where layer content starts (for infinite maps)
+	StartY           int        `json:"starty,omitempty"`                              // Y coordinate where layer content starts (for infinite maps)
+	TintColor        string     `json:"tintcolor,omitempty" xml:"tintcolor,omitempty"` // A tint color that is multiplied with any tiles drawn by this layer in #AARRGGBB or #RRGGBB format (optional).
+	TransParentColor string     `json:"transparentcolor,omitempty"`                    // Hex-formatted color (#RRGGBB) (optional). ImageLayer only.
+	Type             LayerType  `json:"type"`                                          // TileLayer, ObjectGroup, ImageLayer or Group
+	Visible          bool       `json:"visible,omitempty" xml:"visible,omitempty"`     // Whether the layer is shown (1) or hidden (0). Defaults to 1.
+	Width            int        `json:"width,omitempty" xml:"width,omitempty"`         // The width of the layer in tiles. Always the same as the map width for fixed-size maps.
+	X                int        `json:"x" xml:"x"`                                     // The x coordinate of the layer in tiles. Defaults to 0 and can not be changed in Tiled.
+	Y                int        `json:"y" xml:"y"`                                     // The y coordinate of the layer in tiles. Defaults to 0 and can not be changed in Tiled.
 }
 
 // NewTileLayer creates a Layer with type TileLayer.

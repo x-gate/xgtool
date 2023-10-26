@@ -25,29 +25,29 @@ const (
 
 // Map The entrypoint (root) of TMX format.
 type Map struct {
-	BackgroundColor  string      `json:"backgroundcolor,omitempty"`  // Hex-formatted color (#RRGGBB or #AARRGGBB) (optional)
-	Class            string      `json:"class,omitempty"`            // The class of the map (since 1.9, optional)
-	CompressionLevel int         `json:"compressionlevel,omitempty"` // The compression level to use for tile layer data (defaults to -1, which means to use the algorithm default)
-	Height           int         `json:"height"`                     // Number of tile rows
-	HexSideLength    int         `json:"hexsidelength,omitempty"`    // Length of the side of a hex tile in pixels (hexagonal maps only)
-	Infinite         bool        `json:"infinite"`                   // Whether the map has infinite dimensions
-	Layers           []Layer     `json:"layers"`                     // Array of Layers
-	NextLayerID      int         `json:"nextlayerid,omitempty"`      // Auto-increments for each layer
-	NextObjectID     int         `json:"nextobjectid,omitempty"`     // Auto-increments for each placed object
-	Orientation      Orientation `json:"orientation"`                // Orthogonal, Isometric, Staggered or Hexagonal
-	ParallaxOriginX  float64     `json:"parallaxoriginx,omitempty"`  // X coordinate of the parallax origin in pixels (since 1.8, default: 0)
-	ParallaxOriginY  float64     `json:"parallaxoriginy,omitempty"`  // Y coordinate of the parallax origin in pixels (since 1.8, default: 0)
-	Properties       []Property  `json:"properties,omitempty"`       // Array of Property
-	RenderOrder      RenderOrder `json:"renderorder"`                // RightDown (the default), RightUp, LeftDown or LeftUp (currently only supported for orthogonal maps)
-	StaggerAxis      string      `json:"staggeraxis,omitempty"`      // x or y (staggered / hexagonal maps only)
-	StaggerIndex     string      `json:"staggerindex,omitempty"`     // odd or even (staggered / hexagonal maps only)
-	TiledVersion     string      `json:"tiledversion"`               // The Tiled version used to save the file
-	TileHeight       int         `json:"tileheight"`                 // Map grid height
-	TileSets         []TileSet   `json:"tilesets"`                   // Array of TileSet
-	TileWidth        int         `json:"tilewidth"`                  // Map grid width
-	Type             string      `json:"type"`                       // `map` (since 1.0)
-	Version          string      `json:"version"`                    // The JSON format version (previously a number, saved as string since 1.6)
-	Width            int         `json:"width"`                      // Number of tile columns
+	BackgroundColor  string      `json:"backgroundcolor,omitempty" xml:"backgroundcolor,omitempty"`   // The background color of the map. (optional, may include alpha value since 0.15 in the form #AARRGGBB. Defaults to fully transparent.)
+	Class            string      `json:"class,omitempty" xml:"class,omitempty"`                       // The class of this map (since 1.9, defaults to "").
+	CompressionLevel int         `json:"compressionlevel,omitempty" xml:"compressionlevel,omitempty"` // The compression level to use for tile layer data (defaults to -1, which means to use the algorithm default).
+	Height           int         `json:"height" xml:"height"`                                         // The map height in tiles.
+	HexSideLength    int         `json:"hexsidelength,omitempty" xml:"hexsidelength,omitempty"`       // Only for Hexagonal maps. Determines the width or height (depending on the staggered axis) of the tile’s edge, in pixels.
+	Infinite         bool        `json:"infinite,omitempty" xml:"infinite,omitempty"`                 // Whether this map is infinite. An infinite map has no fixed size and can grow in all directions. Its layer data is stored in chunks. (0 for false, 1 for true, defaults to 0)
+	Layers           []Layer     `json:"layers" xml:"layer"`                                          // Array of Layers
+	NextLayerID      int         `json:"nextlayerid,omitempty" xml:"nextlayerid,omitempty"`           // Stores the next available ID for new layers. This number is stored to prevent reuse of the same ID after layers have been removed. (since 1.2) (defaults to the highest layer id in the file + 1)
+	NextObjectID     int         `json:"nextobjectid,omitempty" xml:"nextobjectid,omitempty"`         // Stores the next available ID for new objects. This number is stored to prevent reuse of the same ID after objects have been removed. (since 0.11) (defaults to the highest object id in the file + 1)
+	Orientation      Orientation `json:"orientation" xml:"orientation"`                               // Map orientation. Tiled supports Orthogonal, Isometric, Staggered and Hexagonal (since 0.11).
+	ParallaxOriginX  float64     `json:"parallaxoriginx,omitempty" xml:"parallaxoriginx,omitempty"`   // X coordinate of the parallax origin in pixels (defaults to 0). (since 1.8)
+	ParallaxOriginY  float64     `json:"parallaxoriginy,omitempty" xml:"parallaxoriginy,omitempty"`   // Y coordinate of the parallax origin in pixels (defaults to 0). (since 1.8)
+	Properties       []Property  `json:"properties,omitempty" xml:"properties,omitempty"`             // Array of Property
+	RenderOrder      RenderOrder `json:"renderorder,omitempty" xml:"renderorder,omitempty"`           // The order in which tiles on tile layers are rendered. Valid values are RightDown (the default), RightUp, LeftDown and LeftUp. In all cases, the map is drawn row-by-row. (only supported for orthogonal maps at the moment)
+	StaggerAxis      string      `json:"staggeraxis,omitempty" xml:"staggeraxis,omitempty"`           // For Staggered and Hexagonal maps, determines which axis (“x” or “y”) is staggered. (since 0.11)
+	StaggerIndex     string      `json:"staggerindex,omitempty" xml:"staggerindex,omitempty"`         // For Staggered and Hexagonal maps, determines whether the “even” or “odd” indexes along the staggered axis are shifted. (since 0.11)
+	TiledVersion     string      `json:"tiledversion" xml:"tiledversion"`                             // The Tiled version used to save the file (since Tiled 1.0.1). Maybe a date (for snapshot builds). (optional)
+	TileHeight       int         `json:"tileheight" xml:"tileheight"`                                 // The height of a tile.
+	TileSets         []TileSet   `json:"tilesets" xml:"tileset"`                                      // Array of TileSet
+	TileWidth        int         `json:"tilewidth" xml:"tilewidth"`                                   // The width of a tile.
+	Type             string      `json:"type"`                                                        // `map` (since 1.0)
+	Version          string      `json:"version" xml:"version"`                                       // The TMX format version. Was “1.0” so far, and will be incremented to match minor Tiled releases.
+	Width            int         `json:"width" xml:"width"`                                           // The map width in tiles.
 }
 
 // NewMap creates a Map.
