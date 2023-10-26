@@ -111,18 +111,15 @@ func TestAnimeInfo_LoadAllAnimes(t *testing.T) {
 			res := Resources{}
 			defer res.Close()
 
-			if err := res.OpenAnimeInfo(tc.aif); err != nil {
-				t.Fatal(err)
-			}
-			if err := res.OpenAnime(tc.af); err != nil {
-				t.Fatal(err)
-			}
-			if err := res.OpenGraphicInfo(tc.gif); err != nil {
-				t.Fatal(err)
-			}
-			if err := res.OpenGraphic(tc.gf); err != nil {
-				t.Fatal(err)
-			}
+			var err error
+			err = res.OpenAnimeInfo(tc.aif)
+			skipIfNotExists(tc.aif, err, t)
+			err = res.OpenAnime(tc.af)
+			skipIfNotExists(tc.af, err, t)
+			err = res.OpenGraphicInfo(tc.gif)
+			skipIfNotExists(tc.gif, err, t)
+			err = res.OpenGraphic(tc.gf)
+			skipIfNotExists(tc.gf, err, t)
 
 			var ai AnimeInfo
 			for _, ai = range res.AnimeInfoIndex {
