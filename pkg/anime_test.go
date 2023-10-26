@@ -111,18 +111,15 @@ func TestAnimeInfo_LoadAllAnimes(t *testing.T) {
 			res := Resources{}
 			defer res.Close()
 
-			if err := res.OpenAnimeInfo(tc.aif); err != nil {
-				t.Fatal(err)
-			}
-			if err := res.OpenAnime(tc.af); err != nil {
-				t.Fatal(err)
-			}
-			if err := res.OpenGraphicInfo(tc.gif); err != nil {
-				t.Fatal(err)
-			}
-			if err := res.OpenGraphic(tc.gf); err != nil {
-				t.Fatal(err)
-			}
+			var err error
+			err = res.OpenAnimeInfo(tc.aif)
+			skipIfNotExists(tc.aif, err, t)
+			err = res.OpenAnime(tc.af)
+			skipIfNotExists(tc.af, err, t)
+			err = res.OpenGraphicInfo(tc.gif)
+			skipIfNotExists(tc.gif, err, t)
+			err = res.OpenGraphic(tc.gf)
+			skipIfNotExists(tc.gf, err, t)
 
 			var ai AnimeInfo
 			for _, ai = range res.AnimeInfoIndex {
@@ -139,39 +136,6 @@ func TestAnimeInfo_LoadAllAnimes(t *testing.T) {
 				t.Errorf("expected len(animes): %d, got %d", ai.ActCnt, len(animes))
 			}
 		})
-	}
-
-	res := Resources{}
-	defer res.Close()
-
-	if err := res.OpenAnimeInfo("../testdata/anime_info/AnimeInfo_4.bin"); err != nil {
-		t.Fatal(err)
-	}
-	if err := res.OpenAnime("../testdata/anime/Anime_4.bin"); err != nil {
-		t.Fatal(err)
-	}
-	if err := res.OpenGraphicInfo("../testdata/graphic_info/GraphicInfo_66.bin"); err != nil {
-		t.Fatal(err)
-	}
-	if err := res.OpenGraphic("../testdata/graphic/Graphic_66.bin"); err != nil {
-		t.Fatal(err)
-	}
-	if err := res.OpenPalette("../testdata/palette/palet_00.cgp"); err != nil {
-		t.Fatal(err)
-	}
-
-	var ai AnimeInfo
-	for _, ai = range res.AnimeInfoIndex {
-		break
-	}
-
-	animes, err := ai.LoadAllAnimes(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(animes) != int(ai.ActCnt) {
-		t.Errorf("expected len(animes): %d, got %d", ai.ActCnt, len(animes))
 	}
 }
 
