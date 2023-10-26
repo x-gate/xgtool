@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"xgtool/cmd/convertmap"
 	"xgtool/cmd/dumpanime"
 	"xgtool/cmd/dumpgraphic"
@@ -9,8 +10,8 @@ import (
 	"github.com/cristalhq/acmd"
 )
 
-// Version it can be set by ldflags="main.Version=x.x.x"
-var Version = "0.0.0"
+var appVersion = ""
+var buildTime = ""
 
 func main() {
 	cmds := []acmd.Command{
@@ -39,7 +40,7 @@ func main() {
 	r := acmd.RunnerOf(cmds, acmd.Config{
 		AppName:        "xgtool",
 		AppDescription: "The toolchain of x-gate",
-		Version:        Version,
+		Version:        fmt.Sprintf("XGTool %s (built at: %s)", appVersion, buildTime),
 	})
 
 	if err := r.Run(); err != nil {
