@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"testing"
+	"encoding/xml"
 )
 
 func TestMakeMap(t *testing.T) {
@@ -53,6 +54,11 @@ func TestMap_TiledMap(t *testing.T) {
 	}
 
 	_, err = json.Marshal(tm)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = xml.Marshal(tm)
 	if err != nil {
 		t.Fatal(err)
 	}
