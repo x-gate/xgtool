@@ -55,7 +55,7 @@ func (gh GraphicHeader) Valid() bool {
 
 // Graphic stores data for each graphic, not a strict mapping to the file.
 type Graphic struct {
-	Info        *GraphicInfo // Pointer of GraphicInfo, for reverse searching.
+	Info        GraphicInfo // Pointer of GraphicInfo, for reverse searching.
 	Header      GraphicHeader
 	RawData     []byte        // The raw data which read from graphic file.
 	GraphicData []byte        // The decoded (if needed) data from RawData
@@ -105,7 +105,7 @@ func (g *Graphic) SetPalette(p color.Palette) {
 // LoadGraphic loads graphic data from graphic file.
 func (gi GraphicInfo) LoadGraphic(gf io.ReadSeeker) (g *Graphic, err error) {
 	g = new(Graphic)
-	g.Info = &gi
+	g.Info = gi
 
 	if err = g.readGraphic(gf, int64(gi.Addr), int64(gi.Len)); err != nil {
 		return
