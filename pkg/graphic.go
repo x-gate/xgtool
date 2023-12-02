@@ -104,7 +104,7 @@ func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err er
 	return
 }
 
-func NewGraphicResource(gif io.Reader, gf io.ReadSeeker) (gr GraphicResource, err error) {
+func NewGraphicResource(gif io.Reader) (gr GraphicResource, err error) {
 	gr.idx = make(map[int32][]*Graphic)
 	gr.mdx = make(map[int32][]*Graphic)
 
@@ -124,9 +124,6 @@ func NewGraphicResource(gif io.Reader, gf io.ReadSeeker) (gr GraphicResource, er
 		}
 
 		g := Graphic{Info: gi}
-		if err = g.readGraphic(gf); err != nil {
-			return
-		}
 		gr.idx[gi.ID] = append(gr.idx[gi.ID], &g)
 		if gi.MapID != 0 { // if MapID=0, it's not used in map files
 			gr.mdx[gi.MapID] = append(gr.mdx[gi.MapID], &g)
@@ -143,6 +140,20 @@ func (gi GraphicInfo) LoadGraphic(gf io.ReadSeeker) (g *Graphic, err error) {
 
 	if err = g.readGraphic(gf); err != nil {
 		return
+	}
+
+	return
+}
+
+// LoadGraphic load graphic data for all GraphicResource.
+func (gr GraphicResource) LoadGraphic(gf io.ReadSeeker, p color.Palette) {
+	for _, g := range gr.idx {
+		for i, gg := range g {
+			g[i].PaletteData = p
+			if err := gg.readGraphic(gf); err != nil {
+				g[i].GraphicData = nil
+			}
+		}
 	}
 
 	return
