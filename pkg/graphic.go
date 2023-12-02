@@ -19,8 +19,6 @@ var (
 	ErrDecodeFailed = errors.New("decode failed")
 	// ErrEmptyPalette is returned when Graphic.Image is called but the palette is empty.
 	ErrEmptyPalette = errors.New("empty palette")
-	// ErrInvalidImgType is returned when Graphic.Image is called but the image type is not supported.
-	ErrInvalidImgType = errors.New("invalid image type")
 	// ErrRenderFailed is returned when the Graphic.PaletteData[Graphic.GraphicData[i]] is out of range.
 	ErrRenderFailed = errors.New("render failed")
 )
