@@ -10,7 +10,6 @@ import (
 	"image/jpeg"
 	"os"
 	"path/filepath"
-	"sync"
 	"xgtool/pkg"
 
 	"github.com/rs/zerolog/log"
@@ -38,7 +37,6 @@ func (f *flags) Flags() (fs *flag.FlagSet) {
 
 var (
 	bar *progressbar.ProgressBar
-	wg  sync.WaitGroup
 	f   flags
 )
 
@@ -70,12 +68,10 @@ func DumpGraphic(ctx context.Context, args []string) (err error) {
 		_ = bar.Add(1)
 	}
 
-	wg.Wait()
-
 	return nil
 }
 
-func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) error {
+func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) (err error) {
 	g, err := info.LoadGraphic(gf)
 	if err != nil && (errors.Is(err, pkg.ErrInvalidMagic) || errors.Is(err, pkg.ErrDecodeFailed)) {
 		log.Warn().Msgf("Invalid Graphic: %+v", err)
@@ -91,31 +87,28 @@ func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) error
 		g.SetPalette(palette)
 	}
 
-	go func() {
-		wg.Add(1)
-		defer wg.Done()
+	var img image.Image
+	if img, err = g.ImgRGBA(); err != nil {
+		log.Err(err).Send()
+		return
+	}
 
-		var img image.Image
-		if img, err = g.ImgRGBA(); err != nil {
-			log.Err(err).Send()
-			return
-		}
+	var out *os.File
+	if f.dr {
+		out, err = os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
+	} else {
+		out, err = os.OpenFile(fmt.Sprintf("%s/%d.jpg", filepath.Clean(f.outdir), g.Info.ID), os.O_WRONLY|os.O_CREATE, 0644)
+	}
+	if err != nil {
+		log.Err(err).Send()
+		return
+	}
+	defer out.Close()
 
-		var out *os.File
-		if f.dr {
-			out, err = os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
-		} else {
-			out, err = os.OpenFile(fmt.Sprintf("%s/%d.jpg", filepath.Clean(f.outdir), g.Info.ID), os.O_WRONLY|os.O_CREATE, 0644)
-		}
-		if err != nil {
-			log.Err(err).Send()
-		}
-		defer out.Close()
-
-		if err = jpeg.Encode(out, img, &jpeg.Options{Quality: 75}); err != nil {
-			log.Err(err).Send()
-		}
-	}()
+	if err = jpeg.Encode(out, img, &jpeg.Options{Quality: 75}); err != nil {
+		log.Err(err).Send()
+		return
+	}
 
 	return err
 }
