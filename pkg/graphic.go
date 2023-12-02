@@ -12,6 +12,10 @@ import (
 	"xgtool/internal"
 )
 
+const (
+	GraphicInfoSize = 40
+)
+
 var (
 	// ErrInvalidMagic if graphic header magic is not "RD".
 	ErrInvalidMagic = errors.New("invalid magic")
@@ -65,15 +69,20 @@ type Graphic struct {
 // GraphicInfoIndex is a map of GraphicInfo, key is GraphicInfo.ID or GraphicInfo.MapID.
 type GraphicInfoIndex map[int32]GraphicInfo
 
+type GraphicResource struct {
+	idx map[int32][]*Graphic
+	mdx map[int32][]*Graphic
+}
+
 // MakeGraphicInfoIndexes reads graphic info from src, and returns two GraphicInfoIndex,
 // first is indexed by GraphicInfo.ID, second is indexed by GraphicInfo.MapID.
 func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err error) {
 	idx = make(GraphicInfoIndex)
 	mapIdx = make(GraphicInfoIndex)
 
-	r := bufio.NewReaderSize(gif, 40*100)
+	r := bufio.NewReaderSize(gif, GraphicInfoSize*100)
 	for {
-		buf := bytes.NewBuffer(make([]byte, 40))
+		buf := bytes.NewBuffer(make([]byte, GraphicInfoSize))
 		if _, err = io.ReadFull(r, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
 			err = nil
 			break
@@ -87,8 +96,40 @@ func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err er
 		}
 
 		idx[info.ID] = info
-		if info.MapID != 0 { // there are a lot of graphic info with MapID=0, but they are not used in map files
+		if info.MapID != 0 { // if MapID=0, it's not used in map files
 			mapIdx[info.MapID] = info
+		}
+	}
+
+	return
+}
+
+func NewGraphicResource(gif io.Reader, gf io.ReadSeeker) (gr GraphicResource, err error) {
+	gr.idx = make(map[int32][]*Graphic)
+	gr.mdx = make(map[int32][]*Graphic)
+
+	r := bufio.NewReaderSize(gif, GraphicInfoSize*100)
+	for {
+		buf := bytes.NewBuffer(make([]byte, GraphicInfoSize))
+		if _, err = io.ReadFull(r, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
+			err = nil
+			break
+		} else if err != nil {
+			return
+		}
+
+		var gi GraphicInfo
+		if err = binary.Read(buf, binary.LittleEndian, &gi); err != nil {
+			return
+		}
+
+		g := Graphic{Info: gi}
+		if err = g.readGraphic(gf); err != nil {
+			return
+		}
+		gr.idx[gi.ID] = append(gr.idx[gi.ID], &g)
+		if gi.MapID != 0 { // if MapID=0, it's not used in map files
+			gr.mdx[gi.MapID] = append(gr.mdx[gi.MapID], &g)
 		}
 	}
 
@@ -100,19 +141,19 @@ func (gi GraphicInfo) LoadGraphic(gf io.ReadSeeker) (g *Graphic, err error) {
 	g = new(Graphic)
 	g.Info = gi
 
-	if err = g.readGraphic(gf, int64(gi.Addr), int64(gi.Len)); err != nil {
+	if err = g.readGraphic(gf); err != nil {
 		return
 	}
 
 	return
 }
 
-func (g *Graphic) readGraphic(f io.ReadSeeker, offset, sz int64) (err error) {
-	if _, err = f.Seek(offset, io.SeekStart); err != nil {
+func (g *Graphic) readGraphic(f io.ReadSeeker) (err error) {
+	if _, err = f.Seek(int64(g.Info.Addr), io.SeekStart); err != nil {
 		return
 	}
 
-	buf := bytes.NewBuffer(make([]byte, sz))
+	buf := bytes.NewBuffer(make([]byte, g.Info.Len))
 	if _, err = io.ReadFull(f, buf.Bytes()); err != nil {
 		return
 	}
