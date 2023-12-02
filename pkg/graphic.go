@@ -59,7 +59,6 @@ type Graphic struct {
 	Header      GraphicHeader
 	RawData     []byte        // The raw data which read from graphic file.
 	GraphicData []byte        // The decoded (if needed) data from RawData
-	PaletteLen  int32         // When Version >= 2, read this field from graphic file, it couldn't be set by direct set palette data.
 	PaletteData color.Palette // When Version < 2, set palette data from palette file; otherwise, set palette data from graphic file.
 }
 
@@ -105,10 +104,6 @@ func (gi GraphicInfo) LoadGraphic(gf io.ReadSeeker) (g *Graphic, err error) {
 		return
 	}
 
-	if err = g.decode(); err != nil {
-		return
-	}
-
 	return
 }
 
@@ -130,18 +125,19 @@ func (g *Graphic) readGraphic(f io.ReadSeeker, offset, len int64) (err error) {
 		return fmt.Errorf("%w: info=%+v, header=%+v", ErrInvalidMagic, g.Info, g.Header)
 	}
 
+	var psz int32
 	if g.Header.Version >= 2 {
-		if err = binary.Read(buf, binary.LittleEndian, &g.PaletteLen); err != nil {
+		if err = binary.Read(buf, binary.LittleEndian, &psz); err != nil {
 			return
 		}
 	}
 
 	g.RawData = buf.Bytes()
 
-	return
+	return g.decode(psz)
 }
 
-func (g *Graphic) decode() (err error) {
+func (g *Graphic) decode(psz int32) (err error) {
 	var decoded []byte
 
 	if g.Header.Version&1 == 0 {
@@ -150,8 +146,8 @@ func (g *Graphic) decode() (err error) {
 		return fmt.Errorf("%w: info=%+v, header=%+v", ErrDecodeFailed, g.Info, g.Header)
 	}
 
-	g.GraphicData = decoded[:len(decoded)-int(g.PaletteLen)]
-	g.PaletteData, err = NewPaletteFromBytes(decoded[len(decoded)-int(g.PaletteLen):])
+	g.GraphicData = decoded[:len(decoded)-int(psz)]
+	g.PaletteData, err = NewPaletteFromBytes(decoded[len(decoded)-int(psz):])
 
 	return
 }
