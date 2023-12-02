@@ -49,6 +49,7 @@ type GraphicHeader struct {
 	Len     int32   // Length of graphic data, it shouldn't be trusted, use GraphicInfo.Len instead.
 }
 
+// Valid checks if the graphic is valid.
 func (gh GraphicHeader) Valid() bool {
 	return gh.Magic[0] == 'R' && gh.Magic[1] == 'D'
 }
@@ -187,7 +188,7 @@ func (g *Graphic) ImgPaletted() (img *image.Paletted, err error) {
 		// The code is based on image.Paletted.Set() from go standard library.
 		// The implementation is very slow because it calls p.Palette.Index(c) for each pixel, but it's not necessary.
 		//
-		// Ref: https://cs.opensource.google/go/go/+/refs/tags/go1.21.3:src/image/image.go;l=1188
+		// Ref: https://cs.opensource.google/go/go/+/refs/tags/go1.21.4:src/image/image.go;l=1188
 		if !(image.Point{X: i % w, Y: h - i/w}.In(r)) {
 			continue
 		}
