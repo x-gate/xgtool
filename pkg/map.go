@@ -262,7 +262,7 @@ func render(info GraphicInfo, gf io.ReadSeeker, p color.Palette, outdir string) 
 	}
 
 	if len(g.PaletteData) == 0 {
-		g.SetPalette(p)
+		g.PaletteData = p
 	}
 
 	var img image.Image

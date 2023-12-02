@@ -88,7 +88,7 @@ func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) error
 		if len(palette) == 0 {
 			return pkg.ErrEmptyPalette
 		}
-		g.SetPalette(palette)
+		g.PaletteData = palette
 	}
 
 	go func() {

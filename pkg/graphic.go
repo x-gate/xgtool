@@ -96,12 +96,6 @@ func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err er
 	return
 }
 
-// SetPalette set palette data directly.
-func (g *Graphic) SetPalette(p color.Palette) {
-	g.PaletteLen = int32(len(p)) * 3
-	g.PaletteData = p
-}
-
 // LoadGraphic loads graphic data from graphic file.
 func (gi GraphicInfo) LoadGraphic(gf io.ReadSeeker) (g *Graphic, err error) {
 	g = new(Graphic)
