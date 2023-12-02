@@ -191,9 +191,6 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 			if diff := cmp.Diff(tc.expectedHeader, g.Header); diff != "" {
 				t.Errorf("graphic header mismatch (-want +got):\n%s", diff)
 			}
-			if len(g.RawData) != tc.expectedRawDataLen {
-				t.Errorf("expected len(g.RawData): %d, got %d", tc.expectedRawDataLen, len(g.RawData))
-			}
 			if len(g.GraphicData) != tc.expectedGraphicLen {
 				t.Errorf("expected len(g.GraphicData): %d, got %d", tc.expectedGraphicLen, len(g.GraphicData))
 			}
@@ -201,7 +198,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 				t.Errorf("expected len(g.PaletteLen): %d, got %d", tc.expectedPaletteLen, len(g.PaletteData))
 			}
 
-			t.Logf("header: %+v, len(raw): %d, len(graphic): %d, len(palette): %d", g.Header, len(g.RawData), len(g.GraphicData), len(g.PaletteData))
+			t.Logf("header: %+v, len(graphic): %d, len(palette): %d", g.Header, len(g.GraphicData), len(g.PaletteData))
 		})
 	}
 }

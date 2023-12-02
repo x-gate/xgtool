@@ -57,7 +57,6 @@ func (gh GraphicHeader) Valid() bool {
 type Graphic struct {
 	Info        GraphicInfo // Pointer of GraphicInfo, for reverse searching.
 	Header      GraphicHeader
-	RawData     []byte        // The raw data which read from graphic file.
 	GraphicData []byte        // The decoded (if needed) data from RawData
 	PaletteData color.Palette // When Version < 2, set palette data from palette file; otherwise, set palette data from graphic file.
 }
@@ -107,12 +106,12 @@ func (gi GraphicInfo) LoadGraphic(gf io.ReadSeeker) (g *Graphic, err error) {
 	return
 }
 
-func (g *Graphic) readGraphic(f io.ReadSeeker, offset, len int64) (err error) {
+func (g *Graphic) readGraphic(f io.ReadSeeker, offset, sz int64) (err error) {
 	if _, err = f.Seek(offset, io.SeekStart); err != nil {
 		return
 	}
 
-	buf := bytes.NewBuffer(make([]byte, len))
+	buf := bytes.NewBuffer(make([]byte, sz))
 	if _, err = io.ReadFull(f, buf.Bytes()); err != nil {
 		return
 	}
@@ -132,22 +131,23 @@ func (g *Graphic) readGraphic(f io.ReadSeeker, offset, len int64) (err error) {
 		}
 	}
 
-	g.RawData = buf.Bytes()
-
-	return g.decode(psz)
-}
-
-func (g *Graphic) decode(psz int32) (err error) {
 	var decoded []byte
-
-	if g.Header.Version&1 == 0 {
-		decoded = g.RawData
-	} else if decoded, err = internal.Decode(g.RawData); err != nil {
-		return fmt.Errorf("%w: info=%+v, header=%+v", ErrDecodeFailed, g.Info, g.Header)
+	if decoded, err = g.decode(buf.Bytes()); err != nil {
+		return
 	}
 
 	g.GraphicData = decoded[:len(decoded)-int(psz)]
 	g.PaletteData, err = NewPaletteFromBytes(decoded[len(decoded)-int(psz):])
+
+	return
+}
+
+func (g *Graphic) decode(raw []byte) (decoded []byte, err error) {
+	if g.Header.Version&1 == 0 {
+		decoded = raw
+	} else if decoded, _ = internal.Decode(raw); decoded == nil {
+		return
+	}
 
 	return
 }
