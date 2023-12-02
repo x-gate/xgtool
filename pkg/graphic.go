@@ -39,8 +39,8 @@ type GraphicInfo struct {
 	MapID  int32
 }
 
-// graphicHeader structure for each graphic header, 16 bytes.
-type graphicHeader struct {
+// GraphicHeader structure for each graphic header, 16 bytes.
+type GraphicHeader struct {
 	Magic   [2]byte // "RD" for valid graphic
 	Version byte    // 0 for raw data, 1 for encoded data, 2 for raw data with palette, 3 for encoded data with palette
 	_       byte    //
@@ -52,7 +52,7 @@ type graphicHeader struct {
 // Graphic stores data for each graphic, not a strict mapping to the file.
 type Graphic struct {
 	Info        *GraphicInfo // Pointer of GraphicInfo, for reverse searching.
-	Header      graphicHeader
+	Header      GraphicHeader
 	RawData     []byte        // The raw data which read from graphic file.
 	GraphicData []byte        // The decoded (if needed) data from RawData
 	PaletteLen  int32         // When Version >= 2, read this field from graphic file, it couldn't be set by direct set palette data.

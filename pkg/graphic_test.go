@@ -48,7 +48,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 	testcases := []struct {
 		infoName           string
 		graphicName        string
-		expectedHeader     graphicHeader
+		expectedHeader     GraphicHeader
 		expectedRawDataLen int
 		expectedGraphicLen int
 		expectedPaletteLen int
@@ -56,7 +56,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 		{
 			infoName:    "../testdata/graphic_info/GraphicInfo_66.bin",
 			graphicName: "../testdata/graphic/Graphic_66.bin",
-			expectedHeader: graphicHeader{
+			expectedHeader: GraphicHeader{
 				Magic:   [2]byte{'R', 'D'},
 				Version: 1,
 				Width:   64,
@@ -70,7 +70,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 		{
 			infoName:    "../testdata/graphic_info/GraphicInfoEx_5.bin",
 			graphicName: "../testdata/graphic/GraphicEx_5.bin",
-			expectedHeader: graphicHeader{
+			expectedHeader: GraphicHeader{
 				Magic:   [2]byte{'R', 'D'},
 				Version: 1,
 				Width:   64,
@@ -84,7 +84,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 		{
 			infoName:    "../testdata/graphic_info/GraphicInfoV3_19.bin",
 			graphicName: "../testdata/graphic/GraphicV3_19.bin",
-			expectedHeader: graphicHeader{
+			expectedHeader: GraphicHeader{
 				Magic:   [2]byte{'R', 'D'},
 				Version: 1,
 				Width:   228,
@@ -98,7 +98,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 		{
 			infoName:    "../testdata/graphic_info/GraphicInfo_PUK2_2.bin",
 			graphicName: "../testdata/graphic/Graphic_PUK2_2.bin",
-			expectedHeader: graphicHeader{
+			expectedHeader: GraphicHeader{
 				Magic:   [2]byte{'R', 'D'},
 				Version: 3,
 				Width:   640,
@@ -112,7 +112,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 		{
 			infoName:    "../testdata/graphic_info/GraphicInfo_PUK3_1.bin",
 			graphicName: "../testdata/graphic/Graphic_PUK3_1.bin",
-			expectedHeader: graphicHeader{
+			expectedHeader: GraphicHeader{
 				Magic:   [2]byte{'R', 'D'},
 				Version: 3,
 				Width:   548,
@@ -126,7 +126,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 		{
 			infoName:    "../testdata/graphic_info/GraphicInfo_Joy_125.bin",
 			graphicName: "../testdata/graphic/Graphic_Joy_125.bin",
-			expectedHeader: graphicHeader{
+			expectedHeader: GraphicHeader{
 				Magic:   [2]byte{'R', 'D'},
 				Version: 3,
 				Width:   80,
@@ -140,7 +140,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 		{
 			infoName:    "../testdata/graphic_info/GraphicInfo_Joy_CH1.bin",
 			graphicName: "../testdata/graphic/Graphic_Joy_CH1.bin",
-			expectedHeader: graphicHeader{
+			expectedHeader: GraphicHeader{
 				Magic:   [2]byte{'R', 'D'},
 				Version: 3,
 				Width:   88,
@@ -154,7 +154,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 		{
 			infoName:    "../testdata/graphic_info/GraphicInfo_Joy_EX_152.bin",
 			graphicName: "../testdata/graphic/Graphic_Joy_EX_152.bin",
-			expectedHeader: graphicHeader{
+			expectedHeader: GraphicHeader{
 				Magic:   [2]byte{'R', 'D'},
 				Version: 3,
 				Width:   88,
