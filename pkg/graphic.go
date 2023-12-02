@@ -49,6 +49,10 @@ type GraphicHeader struct {
 	Len     int32   // Length of graphic data, it shouldn't be trusted, use GraphicInfo.Len instead.
 }
 
+func (gh GraphicHeader) Valid() bool {
+	return gh.Magic[0] == 'R' && gh.Magic[1] == 'D'
+}
+
 // Graphic stores data for each graphic, not a strict mapping to the file.
 type Graphic struct {
 	Info        *GraphicInfo // Pointer of GraphicInfo, for reverse searching.
@@ -128,7 +132,7 @@ func (g *Graphic) readGraphic(f io.ReadSeeker, offset, len int64) (err error) {
 		return
 	}
 
-	if g.Header.Magic[0] != 'R' || g.Header.Magic[1] != 'D' {
+	if !g.Header.Valid() {
 		return fmt.Errorf("%w: info=%+v, header=%+v", ErrInvalidMagic, g.Info, g.Header)
 	}
 
