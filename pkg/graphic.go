@@ -67,6 +67,8 @@ type Graphic struct {
 }
 
 // GraphicInfoIndex is a map of GraphicInfo, key is GraphicInfo.ID or GraphicInfo.MapID.
+//
+// Deprecated: Use GraphicResource instead.
 type GraphicInfoIndex map[int32]GraphicInfo
 
 type GraphicResource struct {
@@ -76,6 +78,8 @@ type GraphicResource struct {
 
 // MakeGraphicInfoIndexes reads graphic info from src, and returns two GraphicInfoIndex,
 // first is indexed by GraphicInfo.ID, second is indexed by GraphicInfo.MapID.
+//
+// Deprecated: Use NewGraphicResource instead.
 func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err error) {
 	idx = make(GraphicInfoIndex)
 	mapIdx = make(GraphicInfoIndex)
