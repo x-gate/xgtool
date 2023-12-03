@@ -93,7 +93,7 @@ func DumpAnime(ctx context.Context, args []string) (err error) {
 		if p, err = palette(res, pres, ai); err != nil {
 			return
 		}
-		if err = dumpAnime(ai, res.AnimeFile, res.GraphicIDIndex, res.GraphicFile, p); err != nil {
+		if err = dumpAnime(ai, res.AnimeFile, res.GraphicResource.IDx, res.GraphicFile, p); err != nil {
 			log.Err(err).Send()
 		}
 		_ = bar.Add(1)
@@ -104,10 +104,10 @@ func DumpAnime(ctx context.Context, args []string) (err error) {
 
 func palette(res pkg.Resources, pres pkg.Resources, ai pkg.AnimeInfo) (p color.Palette, err error) {
 	// use hidden palette
-	if len(pres.GraphicMapIndex) > 0 {
-		if _, ok := pres.GraphicMapIndex[ai.ID]; ok {
+	if len(pres.GraphicResource.MDx) > 0 {
+		if _, ok := pres.GraphicResource.MDx[ai.ID]; ok {
 			var pg *pkg.Graphic
-			if pg, err = pres.GraphicMapIndex[ai.ID].LoadGraphic(pres.GraphicFile); err != nil {
+			if err = pres.GraphicResource.MDx[ai.ID][0].Load(pres.GraphicFile); err != nil {
 				return nil, err
 			}
 
@@ -125,7 +125,7 @@ func palette(res pkg.Resources, pres pkg.Resources, ai pkg.AnimeInfo) (p color.P
 	return nil, fmt.Errorf("%w: %d", errPaletteNotFound, ai.ID)
 }
 
-func dumpAnime(ai pkg.AnimeInfo, af *os.File, idx pkg.GraphicInfoIndex, gf *os.File, p color.Palette) (err error) {
+func dumpAnime(ai pkg.AnimeInfo, af *os.File, idx pkg.GraphicIndex, gf *os.File, p color.Palette) (err error) {
 	var animes []*pkg.Anime
 	if animes, err = ai.LoadAllAnimes(af, idx, gf); err != nil {
 		return

@@ -12,6 +12,11 @@ import (
 	"xgtool/internal"
 )
 
+const (
+	// GraphicInfoSize is the size of GraphicInfo structure in bytes.
+	GraphicInfoSize = 40
+)
+
 var (
 	// ErrInvalidMagic if graphic header magic is not "RD".
 	ErrInvalidMagic = errors.New("invalid magic")
@@ -19,8 +24,6 @@ var (
 	ErrDecodeFailed = errors.New("decode failed")
 	// ErrEmptyPalette is returned when Graphic.Image is called but the palette is empty.
 	ErrEmptyPalette = errors.New("empty palette")
-	// ErrInvalidImgType is returned when Graphic.Image is called but the image type is not supported.
-	ErrInvalidImgType = errors.New("invalid image type")
 	// ErrRenderFailed is returned when the Graphic.PaletteData[Graphic.GraphicData[i]] is out of range.
 	ErrRenderFailed = errors.New("render failed")
 )
@@ -41,8 +44,8 @@ type GraphicInfo struct {
 	MapID  int32
 }
 
-// graphicHeader structure for each graphic header, 16 bytes.
-type graphicHeader struct {
+// GraphicHeader structure for each graphic header, 16 bytes.
+type GraphicHeader struct {
 	Magic   [2]byte // "RD" for valid graphic
 	Version byte    // 0 for raw data, 1 for encoded data, 2 for raw data with palette, 3 for encoded data with palette
 	_       byte    //
@@ -51,77 +54,108 @@ type graphicHeader struct {
 	Len     int32   // Length of graphic data, it shouldn't be trusted, use GraphicInfo.Len instead.
 }
 
+// Valid checks if the graphic is valid.
+func (gh GraphicHeader) Valid() bool {
+	return gh.Magic[0] == 'R' && gh.Magic[1] == 'D'
+}
+
 // Graphic stores data for each graphic, not a strict mapping to the file.
 type Graphic struct {
-	Info        *GraphicInfo // Pointer of GraphicInfo, for reverse searching.
-	Header      graphicHeader
-	RawData     []byte        // The raw data which read from graphic file.
+	Info        GraphicInfo // Pointer of GraphicInfo, for reverse searching.
+	Header      GraphicHeader
 	GraphicData []byte        // The decoded (if needed) data from RawData
-	PaletteLen  int32         // When Version >= 2, read this field from graphic file, it couldn't be set by direct set palette data.
 	PaletteData color.Palette // When Version < 2, set palette data from palette file; otherwise, set palette data from graphic file.
 }
 
-// GraphicInfoIndex is a map of GraphicInfo, key is GraphicInfo.ID or GraphicInfo.MapID.
-type GraphicInfoIndex map[int32]GraphicInfo
+// GraphicIndex is a map of Graphic, key is the ID of the graphic.
+type GraphicIndex map[int32][]*Graphic
 
-// MakeGraphicInfoIndexes reads graphic info from src, and returns two GraphicInfoIndex,
-// first is indexed by GraphicInfo.ID, second is indexed by GraphicInfo.MapID.
-func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err error) {
-	idx = make(GraphicInfoIndex)
-	mapIdx = make(GraphicInfoIndex)
+// Find finds graphic data for specific id.
+func (idx GraphicIndex) Find(id int32) []*Graphic {
+	return idx[id]
+}
 
-	r := bufio.NewReaderSize(gif, 40*100)
-	for {
-		buf := bytes.NewBuffer(make([]byte, 40))
-		if _, err = io.ReadFull(r, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
-			err = nil
-			break
-		} else if err != nil {
-			return nil, nil, err
-		}
+// First finds the first graphic data for specific id.
+func (idx GraphicIndex) First(id int32) *Graphic {
+	if g := idx.Find(id); len(g) > 0 {
+		return g[0]
+	}
+	return nil
+}
 
-		var info GraphicInfo
-		if err = binary.Read(buf, binary.LittleEndian, &info); err != nil {
-			return nil, nil, err
-		}
-
-		idx[info.ID] = info
-		if info.MapID != 0 { // there are a lot of graphic info with MapID=0, but they are not used in map files
-			mapIdx[info.MapID] = info
+// Load loads graphic data for specific id.
+func (idx GraphicIndex) Load(id int32, gf io.ReadSeeker) (err error) {
+	for _, g := range idx.Find(id) {
+		if err = g.Load(gf); err != nil {
+			return
 		}
 	}
 
 	return
 }
 
-// SetPalette set palette data directly.
-func (g *Graphic) SetPalette(p color.Palette) {
-	g.PaletteLen = int32(len(p)) * 3
-	g.PaletteData = p
+// GraphicResource is a map of []*Graphic, key is the ID or MapID of the graphic.
+type GraphicResource struct {
+	IDx GraphicIndex // Index by GraphicInfo.ID
+	MDx GraphicIndex // Index by GraphicInfo.MapID
+}
+
+// NewGraphicResource reads graphic info from gif, and returns GraphicResource.
+//
+// The graphic data is not loaded yet, use GraphicIndex.Load to load graphic data.
+func NewGraphicResource(gif io.Reader) (gr GraphicResource, err error) {
+	gr.IDx = make(map[int32][]*Graphic)
+	gr.MDx = make(map[int32][]*Graphic)
+
+	r := bufio.NewReaderSize(gif, GraphicInfoSize*100)
+	for {
+		buf := bytes.NewBuffer(make([]byte, GraphicInfoSize))
+		if _, err = io.ReadFull(r, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
+			err = nil
+			break
+		} else if err != nil {
+			return
+		}
+
+		var gi GraphicInfo
+		if err = binary.Read(buf, binary.LittleEndian, &gi); err != nil {
+			return
+		}
+
+		g := Graphic{Info: gi}
+		gr.IDx[gi.ID] = append(gr.IDx[gi.ID], &g)
+		if gi.MapID != 0 { // if MapID=0, it's not used in map files
+			gr.MDx[gi.MapID] = append(gr.MDx[gi.MapID], &g)
+		}
+	}
+
+	return
 }
 
 // LoadGraphic loads graphic data from graphic file.
 func (gi GraphicInfo) LoadGraphic(gf io.ReadSeeker) (g *Graphic, err error) {
 	g = new(Graphic)
-	g.Info = &gi
+	g.Info = gi
 
-	if err = g.readGraphic(gf, int64(gi.Addr), int64(gi.Len)); err != nil {
-		return
-	}
-
-	if err = g.decode(); err != nil {
+	if err = g.Load(gf); err != nil {
 		return
 	}
 
 	return
 }
 
-func (g *Graphic) readGraphic(f io.ReadSeeker, offset, len int64) (err error) {
-	if _, err = f.Seek(offset, io.SeekStart); err != nil {
+// Load reads from graphic file, and decode if needed
+func (g *Graphic) Load(f io.ReadSeeker) (err error) {
+	// If GraphicData is not empty, it's already loaded.
+	if len(g.GraphicData) != 0 {
+		return nil
+	}
+
+	if _, err = f.Seek(int64(g.Info.Addr), io.SeekStart); err != nil {
 		return
 	}
 
-	buf := bytes.NewBuffer(make([]byte, len))
+	buf := bytes.NewBuffer(make([]byte, g.Info.Len))
 	if _, err = io.ReadFull(f, buf.Bytes()); err != nil {
 		return
 	}
@@ -130,40 +164,44 @@ func (g *Graphic) readGraphic(f io.ReadSeeker, offset, len int64) (err error) {
 		return
 	}
 
-	if g.Header.Magic[0] != 'R' || g.Header.Magic[1] != 'D' {
+	if !g.Header.Valid() {
 		return fmt.Errorf("%w: info=%+v, header=%+v", ErrInvalidMagic, g.Info, g.Header)
 	}
 
+	var psz int32
 	if g.Header.Version >= 2 {
-		if err = binary.Read(buf, binary.LittleEndian, &g.PaletteLen); err != nil {
+		if err = binary.Read(buf, binary.LittleEndian, &psz); err != nil {
 			return
 		}
 	}
 
-	g.RawData = buf.Bytes()
+	var decoded []byte
+	if decoded, err = g.decode(buf.Bytes()); err != nil {
+		return
+	}
+
+	g.GraphicData = decoded[:len(decoded)-int(psz)]
+	g.PaletteData, err = NewPaletteFromBytes(decoded[len(decoded)-int(psz):])
 
 	return
 }
 
-func (g *Graphic) decode() (err error) {
-	var decoded []byte
-
+func (g *Graphic) decode(raw []byte) (decoded []byte, err error) {
 	if g.Header.Version&1 == 0 {
-		decoded = g.RawData
-	} else if decoded, err = internal.Decode(g.RawData); err != nil {
-		return fmt.Errorf("%w: info=%+v, header=%+v", ErrDecodeFailed, g.Info, g.Header)
+		decoded = raw
+	} else if decoded, _ = internal.Decode(raw); decoded == nil {
+		return
 	}
-
-	g.GraphicData = decoded[:len(decoded)-int(g.PaletteLen)]
-	g.PaletteData, err = NewPaletteFromBytes(decoded[len(decoded)-int(g.PaletteLen):])
 
 	return
 }
 
 // ImgRGBA convert graphic data to image.RGBA
-func (g *Graphic) ImgRGBA() (img *image.RGBA, err error) {
-	if len(g.PaletteData) == 0 {
+func (g *Graphic) ImgRGBA(p color.Palette) (img *image.RGBA, err error) {
+	if len(g.PaletteData) == 0 && len(p) == 0 {
 		return nil, ErrEmptyPalette
+	} else if len(g.PaletteData) == 0 {
+		g.PaletteData = p
 	}
 
 	w := int(g.Info.Width)
@@ -181,9 +219,11 @@ func (g *Graphic) ImgRGBA() (img *image.RGBA, err error) {
 }
 
 // ImgPaletted convert graphic data to image.Paletted
-func (g *Graphic) ImgPaletted() (img *image.Paletted, err error) {
-	if len(g.PaletteData) == 0 {
+func (g *Graphic) ImgPaletted(p color.Palette) (img *image.Paletted, err error) {
+	if len(g.PaletteData) == 0 && len(p) == 0 {
 		return nil, ErrEmptyPalette
+	} else if len(g.PaletteData) == 0 {
+		g.PaletteData = p
 	}
 
 	w := int(g.Info.Width)
@@ -195,7 +235,7 @@ func (g *Graphic) ImgPaletted() (img *image.Paletted, err error) {
 		// The code is based on image.Paletted.Set() from go standard library.
 		// The implementation is very slow because it calls p.Palette.Index(c) for each pixel, but it's not necessary.
 		//
-		// Ref: https://cs.opensource.google/go/go/+/refs/tags/go1.21.3:src/image/image.go;l=1188
+		// Ref: https://cs.opensource.google/go/go/+/refs/tags/go1.21.4:src/image/image.go;l=1188
 		if !(image.Point{X: i % w, Y: h - i/w}.In(r)) {
 			continue
 		}

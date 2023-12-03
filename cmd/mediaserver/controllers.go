@@ -47,21 +47,21 @@ func dumpGraphic(c *gin.Context) {
 		id = *query.MapID
 	}
 
-	if _, ok := res.GraphicIDIndex[id]; !ok {
+	if _, ok := res.GraphicResource.IDx[id]; !ok {
 		c.JSON(404, gin.H{"error": "id not found"})
 		return
 	}
 
-	var graphic *pkg.Graphic
-	if graphic, err = res.GraphicIDIndex[id].LoadGraphic(res.GraphicFile); err != nil {
+	if err = res.GraphicResource.IDx.Load(id, res.GraphicFile); err != nil {
 		log.Err(err).Send()
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+	graphic := res.GraphicResource.IDx.First(id)
 
 	c.Stream(func(w io.Writer) bool {
 		var img image.Image
-		if img, err = graphic.ImgRGBA(); err != nil {
+		if img, err = graphic.ImgRGBA(res.Palette); err != nil {
 			log.Err(err).Send()
 			c.JSON(500, gin.H{"error": err.Error()})
 			return true
@@ -94,7 +94,7 @@ func dumpAnime(c *gin.Context) {
 	}
 
 	var animes []*pkg.Anime
-	animes, err = res.AnimeInfoIndex[id].LoadAllAnimes(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
+	animes, err = res.AnimeInfoIndex[id].LoadAllAnimes(res.AnimeFile, res.GraphicResource.IDx, res.GraphicFile)
 
 	c.Stream(func(w io.Writer) bool {
 		var img *gif.GIF

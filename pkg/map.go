@@ -94,7 +94,7 @@ func readBlock(f io.Reader, len int) (b []uint16, err error) {
 }
 
 // TiledMap convert the Map to a tmx.Map
-func (m Map) TiledMap(index GraphicInfoIndex, gf io.ReadSeeker, p color.Palette, outdir string) (tiled tmx.Map, err error) {
+func (m Map) TiledMap(index GraphicIndex, gf io.ReadSeeker, p color.Palette, outdir string) (tiled tmx.Map, err error) {
 	tiled = tmx.NewMap(
 		// reverse width and height, because the map will be rotated -90 degrees
 		int(m.Header.Height),
@@ -119,7 +119,7 @@ func (m Map) TiledMap(index GraphicInfoIndex, gf io.ReadSeeker, p color.Palette,
 	return
 }
 
-func (m Map) setGround(tiled *tmx.Map, index GraphicInfoIndex, gf io.ReadSeeker, p color.Palette, outdir string) (gid int, err error) {
+func (m Map) setGround(tiled *tmx.Map, index GraphicIndex, gf io.ReadSeeker, p color.Palette, outdir string) (gid int, err error) {
 	var layer tmx.Layer
 	if layer, err = m.buildGroundLayer(); err != nil {
 		return
@@ -135,7 +135,7 @@ func (m Map) setGround(tiled *tmx.Map, index GraphicInfoIndex, gf io.ReadSeeker,
 	return
 }
 
-func (m Map) setObject(tiled *tmx.Map, gid int, index GraphicInfoIndex, gf io.ReadSeeker, p color.Palette, outdir string) (err error) {
+func (m Map) setObject(tiled *tmx.Map, gid int, index GraphicIndex, gf io.ReadSeeker, p color.Palette, outdir string) (err error) {
 	var layer tmx.Layer
 	if layer, err = m.buildObjectLayer(index, gid); err != nil {
 		return
@@ -175,7 +175,7 @@ func (m Map) buildGroundLayer() (layer tmx.Layer, err error) {
 	return
 }
 
-func (m Map) buildObjectLayer(index GraphicInfoIndex, fgid int) (layer tmx.Layer, err error) {
+func (m Map) buildObjectLayer(index GraphicIndex, fgid int) (layer tmx.Layer, err error) {
 	layer = tmx.NewObjectLayer("object", 2, tmx.TopDown)
 
 	for i, t := range m.Object {
@@ -186,7 +186,7 @@ func (m Map) buildObjectLayer(index GraphicInfoIndex, fgid int) (layer tmx.Layer
 			continue
 		}
 
-		gi := index[int32(t)]
+		gi := index.First(int32(t)).Info
 		obj := tmx.NewObject(int(t)+fgid, int(t), float64(gi.Width), float64(gi.Height))
 		obj.X, obj.Y = objectCoordinate(int32(i), m.Header.Width, gi.Width, gi.Height, gi.OffX, gi.OffY)
 
@@ -211,7 +211,7 @@ func objectCoordinate(i, mapWidth, w, h, offX, offY int32) (x, y float64) {
 	return
 }
 
-func (m Map) buildTileSet(name string, fgid *int, tiles []uint16, index GraphicInfoIndex, gf io.ReadSeeker, p color.Palette, outdir string) (ts tmx.TileSet, err error) {
+func (m Map) buildTileSet(name string, fgid *int, tiles []uint16, index GraphicIndex, gf io.ReadSeeker, p color.Palette, outdir string) (ts tmx.TileSet, err error) {
 	*fgid++
 	ts = tmx.NewTileSet(name, *fgid, tmx.Grid{Orientation: tmx.Orthogonal, Width: 1, Height: 1})
 
@@ -231,7 +231,7 @@ func (m Map) buildTileSet(name string, fgid *int, tiles []uint16, index GraphicI
 			continue
 		}
 
-		mapping[t] = index[int32(t)]
+		mapping[t] = index.First(int32(t)).Info
 		if t > uint16(*fgid) {
 			*fgid = int(t)
 		}
@@ -261,12 +261,8 @@ func render(info GraphicInfo, gf io.ReadSeeker, p color.Palette, outdir string) 
 		return
 	}
 
-	if len(g.PaletteData) == 0 {
-		g.SetPalette(p)
-	}
-
 	var img image.Image
-	if img, err = g.ImgRGBA(); err != nil {
+	if img, err = g.ImgRGBA(p); err != nil {
 		return
 	}
 
