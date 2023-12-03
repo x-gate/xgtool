@@ -84,19 +84,12 @@ func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) error
 		return err
 	}
 
-	if len(g.PaletteData) == 0 {
-		if len(palette) == 0 {
-			return pkg.ErrEmptyPalette
-		}
-		g.PaletteData = palette
-	}
-
 	go func() {
 		wg.Add(1)
 		defer wg.Done()
 
 		var img image.Image
-		if img, err = g.ImgRGBA(nil); err != nil {
+		if img, err = g.ImgRGBA(palette); err != nil {
 			log.Err(err).Send()
 			return
 		}

@@ -152,10 +152,6 @@ func (a Anime) GIF(p color.Palette) (img *gif.GIF, err error) {
 
 	var w, h int
 	for _, g := range a.Graphic {
-		if len(g.PaletteData) == 0 {
-			g.PaletteData = p
-		}
-
 		w = max(w, int(g.Header.Width))
 		h = max(h, int(g.Header.Height))
 

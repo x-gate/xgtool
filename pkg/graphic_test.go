@@ -322,7 +322,6 @@ func TestGraphic_Img(t *testing.T) {
 
 			if tc.pf != "" {
 				err = res.OpenPalette(tc.pf)
-				g.PaletteData = res.Palette
 			}
 
 			_, err = g.ImgRGBA(res.Palette)
@@ -349,7 +348,6 @@ func BenchmarkGraphic_ImgRGBA(b *testing.B) {
 	g, _ := gi.LoadGraphic(res.GraphicFile)
 
 	_ = res.OpenPalette("../testdata/palette/palet_00.cgp")
-	g.PaletteData = res.Palette
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -368,7 +366,6 @@ func BenchmarkGraphic_ImgPaletted(b *testing.B) {
 	g, _ := gi.LoadGraphic(res.GraphicFile)
 
 	_ = res.OpenPalette("../testdata/palette/palet_00.cgp")
-	g.PaletteData = res.Palette
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
