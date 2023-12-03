@@ -12,6 +12,7 @@ type Resources struct {
 	GraphicInfoFile *os.File
 	GraphicIDIndex  GraphicInfoIndex
 	GraphicMapIndex GraphicInfoIndex
+	GraphicResource GraphicResource
 
 	GraphicFile *os.File
 
@@ -36,6 +37,10 @@ func (r *Resources) OpenGraphicInfo(gif string) (err error) {
 	if r.GraphicIDIndex, r.GraphicMapIndex, err = MakeGraphicInfoIndexes(r.GraphicInfoFile); err != nil {
 		return
 	}
+	if r.GraphicResource, err = NewGraphicResource(r.GraphicInfoFile); err != nil {
+		return
+	}
+
 	_, _ = r.GraphicInfoFile.Seek(0, io.SeekStart)
 
 	return

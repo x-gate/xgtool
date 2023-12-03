@@ -84,9 +84,21 @@ func (idx GraphicIndex) First(id int32) *Graphic {
 	return nil
 }
 
+// Load loads graphic data for specific id.
+func (idx GraphicIndex) Load(id int32, gf io.ReadSeeker, p color.Palette) (err error) {
+	for _, g := range idx.Find(id) {
+		g.PaletteData = p
+		if err = g.Load(gf); err != nil {
+			return
+		}
+	}
+
+	return
+}
+
 type GraphicResource struct {
-	idx GraphicIndex
-	mdx GraphicIndex
+	IDx GraphicIndex
+	MDx GraphicIndex
 }
 
 // MakeGraphicInfoIndexes reads graphic info from src, and returns two GraphicInfoIndex,
@@ -122,8 +134,8 @@ func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err er
 }
 
 func NewGraphicResource(gif io.Reader) (gr GraphicResource, err error) {
-	gr.idx = make(map[int32][]*Graphic)
-	gr.mdx = make(map[int32][]*Graphic)
+	gr.IDx = make(map[int32][]*Graphic)
+	gr.MDx = make(map[int32][]*Graphic)
 
 	r := bufio.NewReaderSize(gif, GraphicInfoSize*100)
 	for {
@@ -141,9 +153,9 @@ func NewGraphicResource(gif io.Reader) (gr GraphicResource, err error) {
 		}
 
 		g := Graphic{Info: gi}
-		gr.idx[gi.ID] = append(gr.idx[gi.ID], &g)
+		gr.IDx[gi.ID] = append(gr.IDx[gi.ID], &g)
 		if gi.MapID != 0 { // if MapID=0, it's not used in map files
-			gr.mdx[gi.MapID] = append(gr.mdx[gi.MapID], &g)
+			gr.MDx[gi.MapID] = append(gr.MDx[gi.MapID], &g)
 		}
 	}
 
@@ -157,20 +169,6 @@ func (gi GraphicInfo) LoadGraphic(gf io.ReadSeeker) (g *Graphic, err error) {
 
 	if err = g.Load(gf); err != nil {
 		return
-	}
-
-	return
-}
-
-// Load loads graphic data for specific id.
-func (gr GraphicResource) Load(id int32, gf io.ReadSeeker, p color.Palette) (err error) {
-	gs := gr.idx.Find(id)
-
-	for _, g := range gs {
-		g.PaletteData = p
-		if err = g.Load(gf); err != nil {
-			return
-		}
 	}
 
 	return
