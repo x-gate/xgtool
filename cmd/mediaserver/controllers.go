@@ -61,7 +61,7 @@ func dumpGraphic(c *gin.Context) {
 
 	c.Stream(func(w io.Writer) bool {
 		var img image.Image
-		if img, err = graphic.ImgRGBA(); err != nil {
+		if img, err = graphic.ImgRGBA(nil); err != nil {
 			log.Err(err).Send()
 			c.JSON(500, gin.H{"error": err.Error()})
 			return true

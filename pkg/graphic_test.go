@@ -270,11 +270,9 @@ func TestGraphicIndex_Load(t *testing.T) {
 	skipIfNotExists(GraphicInfoFile, err, t)
 	err = res.OpenGraphic(GraphicFile)
 	skipIfNotExists(GraphicFile, err, t)
-	err = res.OpenPalette(PaletteFile)
-	skipIfNotExists(PaletteFile, err, t)
 
 	gres, _ := NewGraphicResource(res.GraphicInfoFile)
-	if err = gres.IDx.Load(0, res.GraphicFile, res.Palette); err != nil {
+	if err = gres.IDx.Load(0, res.GraphicFile); err != nil {
 		t.Fatal(err)
 	}
 
@@ -361,12 +359,12 @@ func TestGraphic_Img(t *testing.T) {
 				g.PaletteData = res.Palette
 			}
 
-			_, err = g.ImgRGBA()
+			_, err = g.ImgRGBA(res.Palette)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			_, err = g.ImgPaletted()
+			_, err = g.ImgPaletted(res.Palette)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -389,7 +387,7 @@ func BenchmarkGraphic_ImgRGBA(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = g.ImgRGBA()
+		_, _ = g.ImgRGBA(res.Palette)
 	}
 }
 
@@ -408,7 +406,7 @@ func BenchmarkGraphic_ImgPaletted(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = g.ImgPaletted()
+		_, _ = g.ImgPaletted(res.Palette)
 	}
 }
 

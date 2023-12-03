@@ -96,7 +96,7 @@ func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) error
 		defer wg.Done()
 
 		var img image.Image
-		if img, err = g.ImgRGBA(); err != nil {
+		if img, err = g.ImgRGBA(nil); err != nil {
 			log.Err(err).Send()
 			return
 		}

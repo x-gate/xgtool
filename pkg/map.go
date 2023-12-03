@@ -266,7 +266,7 @@ func render(info GraphicInfo, gf io.ReadSeeker, p color.Palette, outdir string) 
 	}
 
 	var img image.Image
-	if img, err = g.ImgRGBA(); err != nil {
+	if img, err = g.ImgRGBA(p); err != nil {
 		return
 	}
 

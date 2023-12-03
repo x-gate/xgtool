@@ -161,7 +161,7 @@ func (a Anime) GIF(p color.Palette) (img *gif.GIF, err error) {
 		h = max(h, int(g.Header.Height))
 
 		var i *image.Paletted
-		if i, err = g.ImgPaletted(); err != nil {
+		if i, err = g.ImgPaletted(p); err != nil {
 			return
 		}
 

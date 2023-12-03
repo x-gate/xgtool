@@ -85,9 +85,8 @@ func (idx GraphicIndex) First(id int32) *Graphic {
 }
 
 // Load loads graphic data for specific id.
-func (idx GraphicIndex) Load(id int32, gf io.ReadSeeker, p color.Palette) (err error) {
+func (idx GraphicIndex) Load(id int32, gf io.ReadSeeker) (err error) {
 	for _, g := range idx.Find(id) {
-		g.PaletteData = p
 		if err = g.Load(gf); err != nil {
 			return
 		}
@@ -222,9 +221,11 @@ func (g *Graphic) decode(raw []byte) (decoded []byte, err error) {
 }
 
 // ImgRGBA convert graphic data to image.RGBA
-func (g *Graphic) ImgRGBA() (img *image.RGBA, err error) {
-	if len(g.PaletteData) == 0 {
+func (g *Graphic) ImgRGBA(p color.Palette) (img *image.RGBA, err error) {
+	if len(g.PaletteData) == 0 && len(p) == 0 {
 		return nil, ErrEmptyPalette
+	} else if len(g.PaletteData) == 0 {
+		g.PaletteData = p
 	}
 
 	w := int(g.Info.Width)
@@ -242,9 +243,11 @@ func (g *Graphic) ImgRGBA() (img *image.RGBA, err error) {
 }
 
 // ImgPaletted convert graphic data to image.Paletted
-func (g *Graphic) ImgPaletted() (img *image.Paletted, err error) {
-	if len(g.PaletteData) == 0 {
+func (g *Graphic) ImgPaletted(p color.Palette) (img *image.Paletted, err error) {
+	if len(g.PaletteData) == 0 && len(p) == 0 {
 		return nil, ErrEmptyPalette
+	} else if len(g.PaletteData) == 0 {
+		g.PaletteData = p
 	}
 
 	w := int(g.Info.Width)
