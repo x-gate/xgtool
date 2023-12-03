@@ -257,7 +257,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 	}
 }
 
-func TestGraphicResource_LoadGraphic(t *testing.T) {
+func TestGraphicResource_Load(t *testing.T) {
 	const GraphicInfoFile = "../testdata/graphic_info/GraphicInfo_66.bin"
 	const GraphicFile = "../testdata/graphic/Graphic_66.bin"
 	const PaletteFile = "../testdata/palette/palet_00.cgp"
@@ -274,9 +274,11 @@ func TestGraphicResource_LoadGraphic(t *testing.T) {
 	skipIfNotExists(PaletteFile, err, t)
 
 	gres, _ := NewGraphicResource(res.GraphicInfoFile)
-	gres.LoadGraphic(res.GraphicFile, res.Palette)
+	if err = gres.Load(0, res.GraphicFile, res.Palette); err != nil {
+		t.Fatal(err)
+	}
 
-	if len(gres.idx[0][0].GraphicData) != 3008 {
+	if len(gres.idx.First(0).GraphicData) != 3008 {
 		t.Errorf("expected len(gres.idx[0][0].GraphicData): %d, got %d", 3008, len(gres.idx[0][0].GraphicData))
 	}
 }

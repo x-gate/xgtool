@@ -71,9 +71,22 @@ type Graphic struct {
 // Deprecated: Use GraphicResource instead.
 type GraphicInfoIndex map[int32]GraphicInfo
 
+type GraphicIndex map[int32][]*Graphic
+
+func (idx GraphicIndex) Find(id int32) []*Graphic {
+	return idx[id]
+}
+
+func (idx GraphicIndex) First(id int32) *Graphic {
+	if g := idx.Find(id); len(g) > 0 {
+		return g[0]
+	}
+	return nil
+}
+
 type GraphicResource struct {
-	idx map[int32][]*Graphic
-	mdx map[int32][]*Graphic
+	idx GraphicIndex
+	mdx GraphicIndex
 }
 
 // MakeGraphicInfoIndexes reads graphic info from src, and returns two GraphicInfoIndex,
@@ -142,28 +155,29 @@ func (gi GraphicInfo) LoadGraphic(gf io.ReadSeeker) (g *Graphic, err error) {
 	g = new(Graphic)
 	g.Info = gi
 
-	if err = g.readGraphic(gf); err != nil {
+	if err = g.Load(gf); err != nil {
 		return
 	}
 
 	return
 }
 
-// LoadGraphic load graphic data for all GraphicResource.
-func (gr GraphicResource) LoadGraphic(gf io.ReadSeeker, p color.Palette) {
-	for _, g := range gr.idx {
-		for i, gg := range g {
-			g[i].PaletteData = p
-			if err := gg.readGraphic(gf); err != nil {
-				g[i].GraphicData = nil
-			}
+// Load loads graphic data for specific id.
+func (gr GraphicResource) Load(id int32, gf io.ReadSeeker, p color.Palette) (err error) {
+	gs := gr.idx.Find(id)
+
+	for _, g := range gs {
+		g.PaletteData = p
+		if err = g.Load(gf); err != nil {
+			return
 		}
 	}
 
 	return
 }
 
-func (g *Graphic) readGraphic(f io.ReadSeeker) (err error) {
+// Load reads from graphic file, and decode if needed
+func (g *Graphic) Load(f io.ReadSeeker) (err error) {
 	if _, err = f.Seek(int64(g.Info.Addr), io.SeekStart); err != nil {
 		return
 	}
