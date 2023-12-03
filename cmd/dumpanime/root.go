@@ -9,7 +9,6 @@ import (
 	"image/gif"
 	"os"
 	"path/filepath"
-	"sync"
 	"xgtool/pkg"
 
 	"github.com/rs/zerolog/log"
@@ -47,7 +46,6 @@ func (f *flags) Flags() (fs *flag.FlagSet) {
 
 var (
 	bar *progressbar.ProgressBar
-	wg  sync.WaitGroup
 	f   flags
 )
 
@@ -101,8 +99,6 @@ func DumpAnime(ctx context.Context, args []string) (err error) {
 		_ = bar.Add(1)
 	}
 
-	wg.Wait()
-
 	return
 }
 
@@ -136,32 +132,27 @@ func dumpAnime(ai pkg.AnimeInfo, af *os.File, idx pkg.GraphicIndex, gf *os.File,
 	}
 
 	for i, a := range animes {
-		go func(a *pkg.Anime, i int) {
-			wg.Add(1)
-			defer wg.Done()
+		var img *gif.GIF
+		if img, err = a.GIF(p); err != nil {
+			log.Err(err).Msgf("anime: %+v", a.Info)
+			return
+		}
 
-			var img *gif.GIF
-			if img, err = a.GIF(p); err != nil {
-				log.Err(err).Msgf("anime: %+v", a.Info)
-				return
-			}
+		var out *os.File
+		if f.dr {
+			out, err = os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
+		} else {
+			out, err = os.OpenFile(fmt.Sprintf("%s/%d-%d.gif", filepath.Clean(f.outdir), ai.ID, i), os.O_WRONLY|os.O_CREATE, 0644)
+		}
+		if err != nil {
+			log.Err(err).Msgf("anime: %+v", a.Info)
+			return
+		}
 
-			var out *os.File
-			if f.dr {
-				out, err = os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
-			} else {
-				out, err = os.OpenFile(fmt.Sprintf("%s/%d-%d.gif", filepath.Clean(f.outdir), ai.ID, i), os.O_WRONLY|os.O_CREATE, 0644)
-			}
-			if err != nil {
-				log.Err(err).Msgf("anime: %+v", a.Info)
-				return
-			}
-
-			if err = gif.EncodeAll(out, img); err != nil {
-				log.Err(err).Msgf("anime: %+v", a.Info)
-				return
-			}
-		}(a, i)
+		if err = gif.EncodeAll(out, img); err != nil {
+			log.Err(err).Msgf("anime: %+v", a.Info)
+			return
+		}
 	}
 
 	return
