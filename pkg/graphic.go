@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	// GraphicInfoSize is the size of GraphicInfo structure in bytes.
 	GraphicInfoSize = 40
 )
 
@@ -66,12 +67,15 @@ type Graphic struct {
 	PaletteData color.Palette // When Version < 2, set palette data from palette file; otherwise, set palette data from graphic file.
 }
 
+// GraphicIndex is a map of Graphic, key is the ID of the graphic.
 type GraphicIndex map[int32][]*Graphic
 
+// Find finds graphic data for specific id.
 func (idx GraphicIndex) Find(id int32) []*Graphic {
 	return idx[id]
 }
 
+// First finds the first graphic data for specific id.
 func (idx GraphicIndex) First(id int32) *Graphic {
 	if g := idx.Find(id); len(g) > 0 {
 		return g[0]
@@ -90,11 +94,15 @@ func (idx GraphicIndex) Load(id int32, gf io.ReadSeeker) (err error) {
 	return
 }
 
+// GraphicResource is a map of []*Graphic, key is the ID or MapID of the graphic.
 type GraphicResource struct {
-	IDx GraphicIndex
-	MDx GraphicIndex
+	IDx GraphicIndex // Index by GraphicInfo.ID
+	MDx GraphicIndex // Index by GraphicInfo.MapID
 }
 
+// NewGraphicResource reads graphic info from gif, and returns GraphicResource.
+//
+// The graphic data is not loaded yet, use GraphicIndex.Load to load graphic data.
 func NewGraphicResource(gif io.Reader) (gr GraphicResource, err error) {
 	gr.IDx = make(map[int32][]*Graphic)
 	gr.MDx = make(map[int32][]*Graphic)
