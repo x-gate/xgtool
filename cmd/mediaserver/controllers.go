@@ -94,7 +94,7 @@ func dumpAnime(c *gin.Context) {
 	}
 
 	var animes []*pkg.Anime
-	animes, err = res.AnimeInfoIndex[id].LoadAllAnimes(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
+	animes, err = res.AnimeInfoIndex[id].LoadAllAnimes(res.AnimeFile, res.GraphicResource.IDx, res.GraphicFile)
 
 	c.Stream(func(w io.Writer) bool {
 		var img *gif.GIF

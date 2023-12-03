@@ -37,6 +37,9 @@ func (r *Resources) OpenGraphicInfo(gif string) (err error) {
 	if r.GraphicIDIndex, r.GraphicMapIndex, err = MakeGraphicInfoIndexes(r.GraphicInfoFile); err != nil {
 		return
 	}
+
+	_, _ = r.GraphicInfoFile.Seek(0, io.SeekStart)
+
 	if r.GraphicResource, err = NewGraphicResource(r.GraphicInfoFile); err != nil {
 		return
 	}

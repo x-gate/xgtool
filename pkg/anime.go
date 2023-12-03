@@ -76,7 +76,7 @@ func MakeAnimeInfoIndex(src io.Reader) (AnimeInfoIndex, error) {
 }
 
 // LoadAllAnimes loads all animes (with all directions and actions) from anime file.
-func (ai AnimeInfo) LoadAllAnimes(af *os.File, idx GraphicInfoIndex, gf io.ReadSeeker) (animes []*Anime, err error) {
+func (ai AnimeInfo) LoadAllAnimes(af *os.File, idx GraphicIndex, gf io.ReadSeeker) (animes []*Anime, err error) {
 	animes = make([]*Anime, 0, ai.ActCnt)
 
 	if _, err = af.Seek(int64(ai.Addr), io.SeekStart); err != nil {
@@ -120,7 +120,7 @@ func (ai AnimeInfo) readAnimeHeader(af io.Reader, len int) (h animeHeader, err e
 	return
 }
 
-func (ai AnimeInfo) readAnimeFrames(af io.Reader, cnt int, idx GraphicInfoIndex, gf io.ReadSeeker) (f []animeFrame, g []*Graphic, err error) {
+func (ai AnimeInfo) readAnimeFrames(af io.Reader, cnt int, idx GraphicIndex, gf io.ReadSeeker) (f []animeFrame, g []*Graphic, err error) {
 	f = make([]animeFrame, 0, cnt)
 	g = make([]*Graphic, 0, cnt)
 
@@ -135,13 +135,12 @@ func (ai AnimeInfo) readAnimeFrames(af io.Reader, cnt int, idx GraphicInfoIndex,
 			return
 		}
 
-		var graphic *Graphic
-		if graphic, err = idx[frame.GraphicID].LoadGraphic(gf); err != nil {
+		if err = idx.Load(frame.GraphicID, gf); err != nil {
 			return
 		}
 
 		f = append(f, frame)
-		g = append(g, graphic)
+		g = append(g, idx.First(frame.GraphicID))
 	}
 
 	return

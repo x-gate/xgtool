@@ -126,7 +126,7 @@ func TestAnimeInfo_LoadAllAnimes(t *testing.T) {
 				break
 			}
 
-			animes, err := ai.LoadAllAnimes(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
+			animes, err := ai.LoadAllAnimes(res.AnimeFile, res.GraphicResource.IDx, res.GraphicFile)
 			if err != nil {
 				t.Logf("%+v", ai)
 				t.Fatal(err)
@@ -197,7 +197,7 @@ func TestAnime_GIF_1(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			a, err := ai.LoadAllAnimes(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
+			a, err := ai.LoadAllAnimes(res.AnimeFile, res.GraphicResource.IDx, res.GraphicFile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -312,7 +312,7 @@ func TestAnime_GIF_2(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			a, err := ai.LoadAllAnimes(res.AnimeFile, res.GraphicIDIndex, res.GraphicFile)
+			a, err := ai.LoadAllAnimes(res.AnimeFile, res.GraphicResource.IDx, res.GraphicFile)
 			if err != nil {
 				t.Fatal(err)
 			}
