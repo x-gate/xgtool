@@ -47,17 +47,17 @@ func dumpGraphic(c *gin.Context) {
 		id = *query.MapID
 	}
 
-	if _, ok := res.GraphicIDIndex[id]; !ok {
+	if _, ok := res.GraphicResource.IDx[id]; !ok {
 		c.JSON(404, gin.H{"error": "id not found"})
 		return
 	}
 
-	var graphic *pkg.Graphic
-	if graphic, err = res.GraphicIDIndex[id].LoadGraphic(res.GraphicFile); err != nil {
+	if err = res.GraphicResource.IDx.Load(id, res.GraphicFile); err != nil {
 		log.Err(err).Send()
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+	graphic := res.GraphicResource.IDx.First(id)
 
 	c.Stream(func(w io.Writer) bool {
 		var img image.Image

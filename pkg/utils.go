@@ -10,14 +10,10 @@ import (
 // Resources is a collection of files and related resources for command and testing.
 type Resources struct {
 	GraphicInfoFile *os.File
-	GraphicIDIndex  GraphicInfoIndex
-	GraphicMapIndex GraphicInfoIndex
+	GraphicFile     *os.File
+	PaletteFile     *os.File
+	Palette         color.Palette
 	GraphicResource GraphicResource
-
-	GraphicFile *os.File
-
-	PaletteFile *os.File
-	Palette     color.Palette
 
 	MapFile *os.File
 	Map     Map
@@ -33,12 +29,6 @@ func (r *Resources) OpenGraphicInfo(gif string) (err error) {
 	if r.GraphicInfoFile, err = os.Open(gif); err != nil {
 		return
 	}
-
-	if r.GraphicIDIndex, r.GraphicMapIndex, err = MakeGraphicInfoIndexes(r.GraphicInfoFile); err != nil {
-		return
-	}
-
-	_, _ = r.GraphicInfoFile.Seek(0, io.SeekStart)
 
 	if r.GraphicResource, err = NewGraphicResource(r.GraphicInfoFile); err != nil {
 		return

@@ -10,40 +10,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestMakeGraphicIndex(t *testing.T) {
-	testcases := []struct {
-		infoName string
-		expected [2]int // [0] = len(idIndex), [1] = len(mapIndex)
-	}{
-
-		{"../testdata/graphic_info/GraphicInfo_66.bin", [...]int{252788, 21209}},
-		{"../testdata/graphic_info/GraphicInfoEx_5.bin", [...]int{343869, 7390}},
-		{"../testdata/graphic_info/GraphicInfoV3_19.bin", [...]int{20024, 2672}},
-		{"../testdata/graphic_info/GraphicInfo_PUK2_2.bin", [...]int{11033, 4032}},
-		{"../testdata/graphic_info/GraphicInfo_PUK3_1.bin", [...]int{4592, 162}},
-		{"../testdata/graphic_info/GraphicInfo_Joy_125.bin", [...]int{493880, 5250}},
-		{"../testdata/graphic_info/GraphicInfo_Joy_CH1.bin", [...]int{53541, 268}},
-		{"../testdata/graphic_info/GraphicInfo_Joy_EX_152.bin", [...]int{199515, 810}},
-	}
-
-	for _, tc := range testcases {
-		t.Run(tc.infoName, func(t *testing.T) {
-			res := Resources{}
-			defer res.Close()
-
-			err := res.OpenGraphicInfo(tc.infoName)
-			skipIfNotExists(tc.infoName, err, t)
-
-			if len(res.GraphicIDIndex) != tc.expected[0] {
-				t.Errorf("expected len(index): %d, got %d", tc.expected, len(res.GraphicIDIndex))
-			}
-			if len(res.GraphicMapIndex) != tc.expected[1] {
-				t.Errorf("expected len(index): %d, got %d", tc.expected, len(res.GraphicMapIndex))
-			}
-		})
-	}
-}
-
 func TestNewGraphicResource(t *testing.T) {
 	testcases := []struct {
 		infoName string

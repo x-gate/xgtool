@@ -317,13 +317,13 @@ func TestAnime_GIF_2(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			var pg *Graphic
-			if _, ok := pres.GraphicMapIndex[ai.ID]; !ok {
+			if _, ok := pres.GraphicResource.MDx[ai.ID]; !ok {
 				t.Fatalf("gmdx[%d] graphic info not found", ai.ID)
 			}
-			if pg, err = pres.GraphicMapIndex[ai.ID].LoadGraphic(pres.GraphicFile); err != nil {
+			if err = pres.GraphicResource.MDx.Load(ai.ID, pres.GraphicFile); err != nil {
 				t.Fatal(err)
 			}
+			pg := pres.GraphicResource.MDx.First(ai.ID)
 
 			img, err := a[0].GIF(pg.PaletteData)
 			if err != nil {

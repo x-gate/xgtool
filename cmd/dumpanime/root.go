@@ -108,10 +108,10 @@ func DumpAnime(ctx context.Context, args []string) (err error) {
 
 func palette(res pkg.Resources, pres pkg.Resources, ai pkg.AnimeInfo) (p color.Palette, err error) {
 	// use hidden palette
-	if len(pres.GraphicMapIndex) > 0 {
-		if _, ok := pres.GraphicMapIndex[ai.ID]; ok {
+	if len(pres.GraphicResource.MDx) > 0 {
+		if _, ok := pres.GraphicResource.MDx[ai.ID]; ok {
 			var pg *pkg.Graphic
-			if pg, err = pres.GraphicMapIndex[ai.ID].LoadGraphic(pres.GraphicFile); err != nil {
+			if err = pres.GraphicResource.MDx[ai.ID][0].Load(pres.GraphicFile); err != nil {
 				return nil, err
 			}
 

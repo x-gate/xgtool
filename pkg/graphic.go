@@ -66,11 +66,6 @@ type Graphic struct {
 	PaletteData color.Palette // When Version < 2, set palette data from palette file; otherwise, set palette data from graphic file.
 }
 
-// GraphicInfoIndex is a map of GraphicInfo, key is GraphicInfo.ID or GraphicInfo.MapID.
-//
-// Deprecated: Use GraphicResource instead.
-type GraphicInfoIndex map[int32]GraphicInfo
-
 type GraphicIndex map[int32][]*Graphic
 
 func (idx GraphicIndex) Find(id int32) []*Graphic {
@@ -98,38 +93,6 @@ func (idx GraphicIndex) Load(id int32, gf io.ReadSeeker) (err error) {
 type GraphicResource struct {
 	IDx GraphicIndex
 	MDx GraphicIndex
-}
-
-// MakeGraphicInfoIndexes reads graphic info from src, and returns two GraphicInfoIndex,
-// first is indexed by GraphicInfo.ID, second is indexed by GraphicInfo.MapID.
-//
-// Deprecated: Use NewGraphicResource instead.
-func MakeGraphicInfoIndexes(gif io.Reader) (idx, mapIdx GraphicInfoIndex, err error) {
-	idx = make(GraphicInfoIndex)
-	mapIdx = make(GraphicInfoIndex)
-
-	r := bufio.NewReaderSize(gif, GraphicInfoSize*100)
-	for {
-		buf := bytes.NewBuffer(make([]byte, GraphicInfoSize))
-		if _, err = io.ReadFull(r, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
-			err = nil
-			break
-		} else if err != nil {
-			return nil, nil, err
-		}
-
-		var info GraphicInfo
-		if err = binary.Read(buf, binary.LittleEndian, &info); err != nil {
-			return nil, nil, err
-		}
-
-		idx[info.ID] = info
-		if info.MapID != 0 { // if MapID=0, it's not used in map files
-			mapIdx[info.MapID] = info
-		}
-	}
-
-	return
 }
 
 func NewGraphicResource(gif io.Reader) (gr GraphicResource, err error) {

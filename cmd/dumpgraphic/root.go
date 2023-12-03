@@ -60,10 +60,10 @@ func DumpGraphic(ctx context.Context, args []string) (err error) {
 		return
 	}
 
-	bar = progressbar.Default(int64(len(res.GraphicIDIndex)))
+	bar = progressbar.Default(int64(len(res.GraphicResource.IDx)))
 
-	for _, gif := range res.GraphicIDIndex {
-		if err = dumpGraphic(gif, res.GraphicFile, res.Palette); err != nil {
+	for _, gif := range res.GraphicResource.IDx {
+		if err = dumpGraphic(gif[0].Info, res.GraphicFile, res.Palette); err != nil {
 			log.Err(err).Send()
 			return
 		}
