@@ -67,7 +67,7 @@ func ConvertMap(ctx context.Context, args []string) (err error) {
 
 	var tm tmx.Map
 	if tm, err = res.Map.TiledMap(
-		res.GraphicMapIndex,
+		res.GraphicResource.MDx,
 		res.GraphicFile,
 		res.Palette,
 		f.outdir,
