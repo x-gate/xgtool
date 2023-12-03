@@ -175,6 +175,11 @@ func (gi GraphicInfo) LoadGraphic(gf io.ReadSeeker) (g *Graphic, err error) {
 
 // Load reads from graphic file, and decode if needed
 func (g *Graphic) Load(f io.ReadSeeker) (err error) {
+	// If GraphicData is not empty, it's already loaded.
+	if len(g.GraphicData) != 0 {
+		return nil
+	}
+
 	if _, err = f.Seek(int64(g.Info.Addr), io.SeekStart); err != nil {
 		return
 	}
