@@ -9,22 +9,27 @@ import (
 	"image/color"
 	"image/gif"
 	"io"
-	"os"
 	"unsafe"
 )
 
-// AnimeInfo structure for each anime info, 12 bytes
-type AnimeInfo struct {
-	ID     int32
+const (
+	AnimeInfoSize  = 12
+	AnimeFrameSize = 10
+)
+
+type AnimeID int32
+type ActionID int16
+
+type animeInfo struct {
+	ID     AnimeID
 	Addr   int32
 	ActCnt int16
 	_      int16
 }
 
-// animeHeader structure for each anime header, 12 bytes for <= V2, 20 bytes > V3.
 type animeHeader struct {
 	Direct   int16
-	Action   int16
+	Action   ActionID
 	Duration int32
 	FrameCnt int32
 	_        int16 // v3 only
@@ -32,87 +37,89 @@ type animeHeader struct {
 	Sentinel int32 // v3 only
 }
 
-// animeFrame structure for each anime frame, 10 bytes.
-type animeFrame struct {
+type animeFrameData struct {
 	GraphicID int32
 	OffX      int16
 	OffY      int16
 	Flag      int16
 }
 
-// Anime stores data for each anime, not a strict mapping to the file.
-type Anime struct {
-	Info    AnimeInfo
-	Header  animeHeader
-	Frames  []animeFrame
-	Graphic []*Graphic
+type animeFrame struct {
+	Data    animeFrameData
+	Graphic *Graphic
 }
 
-// AnimeInfoIndex is a map is a map of AnimeInfo, key is the ID of the anime.
-type AnimeInfoIndex map[int32]AnimeInfo
+type Anime struct {
+	Header animeHeader
+	Frames []animeFrame
+}
 
-// MakeAnimeInfoIndex reads anime info from src, and returns AnimeInfoIndex.
-func MakeAnimeInfoIndex(src io.Reader) (AnimeInfoIndex, error) {
-	index := make(AnimeInfoIndex)
+type AnimeIndex struct {
+	Info   animeInfo
+	Animes map[ActionID]Anime
+}
 
-	r := bufio.NewReader(src)
+type AnimeResource map[AnimeID]AnimeIndex
+
+func NewAnimeResource(aif io.Reader) (ar AnimeResource, err error) {
+	ar = make(AnimeResource)
+
+	r := bufio.NewReaderSize(aif, AnimeInfoSize*100)
 	for {
-		buf := bytes.NewBuffer(make([]byte, 12))
-		if _, err := io.ReadFull(r, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
+		buf := bytes.NewBuffer(make([]byte, AnimeInfoSize))
+		if _, err = io.ReadFull(r, buf.Bytes()); err != nil && errors.Is(err, io.EOF) {
+			err = nil
 			break
 		} else if err != nil {
-			return nil, err
-		}
-
-		var info AnimeInfo
-		if err := binary.Read(buf, binary.LittleEndian, &info); err != nil {
-			return nil, err
-		}
-
-		index[info.ID] = info
-	}
-
-	return index, nil
-}
-
-// LoadAllAnimes loads all animes (with all directions and actions) from anime file.
-func (ai AnimeInfo) LoadAllAnimes(af *os.File, idx GraphicIndex, gf io.ReadSeeker) (animes []*Anime, err error) {
-	animes = make([]*Anime, 0, ai.ActCnt)
-
-	if _, err = af.Seek(int64(ai.Addr), io.SeekStart); err != nil {
-		return
-	}
-
-	headerSize := getHeaderSize(af)
-
-	if _, err = af.Seek(int64(ai.Addr), io.SeekStart); err != nil {
-		return
-	}
-
-	for i := 0; i < int(ai.ActCnt); i++ {
-		a := new(Anime)
-
-		if a.Header, err = ai.readAnimeHeader(af, headerSize); err != nil {
-			return
-		}
-		if a.Frames, a.Graphic, err = ai.readAnimeFrames(af, int(a.Header.FrameCnt), idx, gf); err != nil {
 			return
 		}
 
-		animes = append(animes, a)
+		var ai animeInfo
+		if err = binary.Read(buf, binary.LittleEndian, &ai); err != nil {
+			return
+		}
+
+		ar[ai.ID] = AnimeIndex{Info: ai, Animes: make(map[ActionID]Anime)}
 	}
 
 	return
 }
 
-func (ai AnimeInfo) readAnimeHeader(af io.Reader, len int) (h animeHeader, err error) {
-	buf := bytes.NewBuffer(make([]byte, len))
+func (aidx AnimeIndex) Load(af io.ReadSeeker, gr GraphicResource) (err error) {
+	if _, err = af.Seek(int64(aidx.Info.Addr), io.SeekStart); err != nil {
+		return
+	}
+
+	hsz := getHeaderSize(af)
+
+	if _, err = af.Seek(int64(aidx.Info.Addr), io.SeekStart); err != nil {
+		return
+	}
+
+	for i := 0; i < int(aidx.Info.ActCnt); i++ {
+		var a Anime
+
+		if a.Header, err = a.readHeader(af, hsz); err != nil {
+			return
+		}
+		if a.Frames, err = a.readFrames(af, int(a.Header.FrameCnt), gr); err != nil {
+			return
+		}
+
+		aidx.Animes[a.Header.Action] = a
+	}
+
+	return
+}
+
+func (a Anime) readHeader(af io.Reader, sz int) (h animeHeader, err error) {
+	buf := bytes.NewBuffer(make([]byte, sz))
 	if _, err = io.ReadFull(af, buf.Bytes()); err != nil {
 		return
 	}
 
 	h = *(*animeHeader)(unsafe.Pointer(&buf.Bytes()[0]))
-	if len == 12 {
+	if sz == 12 {
 		h.Reversed = 0
 		h.Sentinel = 0
 	}
@@ -120,43 +127,40 @@ func (ai AnimeInfo) readAnimeHeader(af io.Reader, len int) (h animeHeader, err e
 	return
 }
 
-func (ai AnimeInfo) readAnimeFrames(af io.Reader, cnt int, idx GraphicIndex, gf io.ReadSeeker) (f []animeFrame, g []*Graphic, err error) {
+func (a Anime) readFrames(af io.Reader, cnt int, gr GraphicResource) (f []animeFrame, err error) {
 	f = make([]animeFrame, 0, cnt)
-	g = make([]*Graphic, 0, cnt)
 
-	buf := bytes.NewBuffer(make([]byte, 10*cnt))
+	buf := bytes.NewBuffer(make([]byte, AnimeFrameSize*cnt))
 	if _, err = io.ReadFull(af, buf.Bytes()); err != nil {
 		return
 	}
 
 	for i := 0; i < cnt; i++ {
-		var frame animeFrame
-		if err = binary.Read(buf, binary.LittleEndian, &frame); err != nil {
+		var fd animeFrameData
+		if err = binary.Read(buf, binary.LittleEndian, &fd); err != nil {
 			return
 		}
 
-		if err = idx.Load(frame.GraphicID, gf); err != nil {
-			return
-		}
-
-		f = append(f, frame)
-		g = append(g, idx.First(frame.GraphicID))
+		f = append(f, animeFrame{Data: fd, Graphic: gr.IDx.First(fd.GraphicID)})
 	}
 
 	return
 }
 
-// GIF returns a gif.GIF from the anime.
-func (a Anime) GIF(p color.Palette) (img *gif.GIF, err error) {
+func (a Anime) GIF(gf io.ReadSeeker, p color.Palette) (img *gif.GIF, err error) {
 	img = new(gif.GIF)
 
 	var w, h int
-	for _, g := range a.Graphic {
-		w = max(w, int(g.Header.Width))
-		h = max(h, int(g.Header.Height))
+	for _, f := range a.Frames {
+		if err = f.Graphic.Load(gf); err != nil {
+			return
+		}
+
+		w = max(w, int(f.Graphic.Header.Width))
+		h = max(h, int(f.Graphic.Header.Height))
 
 		var i *image.Paletted
-		if i, err = g.ImgPaletted(p); err != nil {
+		if i, err = f.Graphic.ImgPaletted(p); err != nil {
 			return
 		}
 
@@ -173,7 +177,7 @@ func (a Anime) GIF(p color.Palette) (img *gif.GIF, err error) {
 	return
 }
 
-func getHeaderSize(af *os.File) (sz int) {
+func getHeaderSize(af io.Reader) (sz int) {
 	buf := bytes.NewBuffer(make([]byte, 20))
 	if _, err := io.ReadFull(af, buf.Bytes()); err != nil {
 		return
