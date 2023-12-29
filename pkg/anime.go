@@ -56,7 +56,7 @@ type Anime struct {
 
 type AnimeIndex struct {
 	Info   animeInfo
-	Animes map[ActionID]Anime
+	Animes map[ActionID][]Anime
 }
 
 type AnimeResource map[AnimeID]AnimeIndex
@@ -79,7 +79,7 @@ func NewAnimeResource(aif io.Reader) (ar AnimeResource, err error) {
 			return
 		}
 
-		ar[ai.ID] = AnimeIndex{Info: ai, Animes: make(map[ActionID]Anime)}
+		ar[ai.ID] = AnimeIndex{Info: ai, Animes: make(map[ActionID][]Anime)}
 	}
 
 	return
@@ -106,7 +106,7 @@ func (aidx AnimeIndex) Load(af io.ReadSeeker, gr GraphicResource) (err error) {
 			return
 		}
 
-		aidx.Animes[a.Header.Action] = a
+		aidx.Animes[a.Header.Action] = append(aidx.Animes[a.Header.Action], a)
 	}
 
 	return

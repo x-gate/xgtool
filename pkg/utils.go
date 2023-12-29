@@ -13,13 +13,13 @@ type Resources struct {
 	GraphicFile     *os.File
 	PaletteFile     *os.File
 	Palette         color.Palette
-	GraphicResource GraphicResource
+	GraphicResource
 
 	MapFile *os.File
 	Map     Map
 
-	AnimeInfoFile  *os.File
-	AnimeInfoIndex AnimeInfoIndex
+	AnimeInfoFile *os.File
+	AnimeResource
 
 	AnimeFile *os.File
 }
@@ -68,13 +68,12 @@ func (r *Resources) OpenMap(mf string) (err error) {
 	return
 }
 
-// OpenAnimeInfo opens an anime info file and makes AnimeInfoIndex.
-func (r *Resources) OpenAnimeInfo(aif string) (err error) {
+func (r *Resources) OpenAnimeResource(aif string) (err error) {
 	if r.AnimeInfoFile, err = os.Open(aif); err != nil {
 		return
 	}
-	r.AnimeInfoIndex, err = MakeAnimeInfoIndex(r.AnimeInfoFile)
-	_, _ = r.AnimeInfoFile.Seek(0, io.SeekStart)
+
+	r.AnimeResource, err = NewAnimeResource(r.AnimeInfoFile)
 
 	return
 }
