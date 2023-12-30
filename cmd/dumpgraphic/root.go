@@ -72,7 +72,7 @@ func DumpGraphic(ctx context.Context, args []string) (err error) {
 					log.Err(err).Send()
 					return
 				}
-				bar.Add(1)
+				_ = bar.Add(1)
 			}
 
 		}
