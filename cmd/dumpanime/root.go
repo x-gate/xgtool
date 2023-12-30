@@ -87,17 +87,28 @@ func DumpAnime(ctx context.Context, args []string) (err error) {
 	}
 
 	bar = progressbar.Default(int64(len(res.AnimeResource)))
+	done := make(chan struct{})
 
-	for _, ai := range res.AnimeResource {
-		var p color.Palette
-		if p, err = palette(res, pres, ai); err != nil {
-			return
+	go func() {
+		defer close(done)
+		for _, ai := range res.AnimeResource {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				var p color.Palette
+				if p, err = palette(res, pres, ai); err != nil {
+					return
+				}
+				if err = dumpAnime(ai, res.AnimeFile, res.GraphicResource, res.GraphicFile, p); err != nil {
+					log.Err(err).Send()
+				}
+				_ = bar.Add(1)
+			}
 		}
-		if err = dumpAnime(ai, res.AnimeFile, res.GraphicResource, res.GraphicFile, p); err != nil {
-			log.Err(err).Send()
-		}
-		_ = bar.Add(1)
-	}
+	}()
+
+	<-done
 
 	return
 }
