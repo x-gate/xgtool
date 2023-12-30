@@ -59,14 +59,25 @@ func DumpGraphic(ctx context.Context, args []string) (err error) {
 	}
 
 	bar = progressbar.Default(int64(len(res.GraphicResource.IDx)))
+	done := make(chan struct{})
 
-	for _, gif := range res.GraphicResource.IDx {
-		if err = dumpGraphic(gif[0].Info, res.GraphicFile, res.Palette); err != nil {
-			log.Err(err).Send()
-			return
+	go func() {
+		defer close(done)
+		for _, gif := range res.GraphicResource.IDx {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				if err = dumpGraphic(gif[0].Info, res.GraphicFile, res.Palette); err != nil {
+					log.Err(err).Send()
+					return
+				}
+				bar.Add(1)
+			}
+
 		}
-		_ = bar.Add(1)
-	}
+	}()
+	<-done
 
 	return nil
 }
