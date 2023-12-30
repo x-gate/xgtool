@@ -13,19 +13,19 @@ type Resources struct {
 	GraphicFile     *os.File
 	PaletteFile     *os.File
 	Palette         color.Palette
-	GraphicResource GraphicResource
+	GraphicResource
 
 	MapFile *os.File
 	Map     Map
 
-	AnimeInfoFile  *os.File
-	AnimeInfoIndex AnimeInfoIndex
+	AnimeInfoFile *os.File
+	AnimeResource
 
 	AnimeFile *os.File
 }
 
-// OpenGraphicInfo opens a graphic info file and makes GraphicInfoIndex by ID and MapID indexes.
-func (r *Resources) OpenGraphicInfo(gif string) (err error) {
+// OpenGraphicResource opens a graphic info file and makes GraphicInfoIndex by ID and MapID indexes.
+func (r *Resources) OpenGraphicResource(gif string) (err error) {
 	if r.GraphicInfoFile, err = os.Open(gif); err != nil {
 		return
 	}
@@ -68,13 +68,13 @@ func (r *Resources) OpenMap(mf string) (err error) {
 	return
 }
 
-// OpenAnimeInfo opens an anime info file and makes AnimeInfoIndex.
-func (r *Resources) OpenAnimeInfo(aif string) (err error) {
+// OpenAnimeResource opens an anime info file and makes AnimeResource.
+func (r *Resources) OpenAnimeResource(aif string) (err error) {
 	if r.AnimeInfoFile, err = os.Open(aif); err != nil {
 		return
 	}
-	r.AnimeInfoIndex, err = MakeAnimeInfoIndex(r.AnimeInfoFile)
-	_, _ = r.AnimeInfoFile.Seek(0, io.SeekStart)
+
+	r.AnimeResource, err = NewAnimeResource(r.AnimeInfoFile)
 
 	return
 }

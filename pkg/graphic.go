@@ -104,8 +104,8 @@ type GraphicResource struct {
 //
 // The graphic data is not loaded yet, use GraphicIndex.Load to load graphic data.
 func NewGraphicResource(gif io.Reader) (gr GraphicResource, err error) {
-	gr.IDx = make(map[int32][]*Graphic)
-	gr.MDx = make(map[int32][]*Graphic)
+	gr.IDx = make(GraphicIndex)
+	gr.MDx = make(GraphicIndex)
 
 	r := bufio.NewReaderSize(gif, GraphicInfoSize*100)
 	for {
