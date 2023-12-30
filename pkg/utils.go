@@ -24,8 +24,8 @@ type Resources struct {
 	AnimeFile *os.File
 }
 
-// OpenGraphicInfo opens a graphic info file and makes GraphicInfoIndex by ID and MapID indexes.
-func (r *Resources) OpenGraphicInfo(gif string) (err error) {
+// OpenGraphicResource opens a graphic info file and makes GraphicInfoIndex by ID and MapID indexes.
+func (r *Resources) OpenGraphicResource(gif string) (err error) {
 	if r.GraphicInfoFile, err = os.Open(gif); err != nil {
 		return
 	}

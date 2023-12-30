@@ -66,7 +66,7 @@ func DumpAnime(ctx context.Context, args []string) (err error) {
 	if err = res.OpenAnime(f.af); err != nil {
 		return
 	}
-	if err = res.OpenGraphicInfo(f.gif); err != nil {
+	if err = res.OpenGraphicResource(f.gif); err != nil {
 		return
 	}
 	if err = res.OpenGraphic(f.gf); err != nil {
@@ -76,7 +76,7 @@ func DumpAnime(ctx context.Context, args []string) (err error) {
 		return
 	}
 	if f.pgif != "" {
-		if err = pres.OpenGraphicInfo(f.pgif); err != nil {
+		if err = pres.OpenGraphicResource(f.pgif); err != nil {
 			return
 		}
 	}

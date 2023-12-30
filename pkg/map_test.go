@@ -38,12 +38,9 @@ func TestMap_TiledMap(t *testing.T) {
 	defer res.Close()
 
 	var err error
-	err = res.OpenGraphicInfo("../testdata/graphic_info/GraphicInfo_66.bin")
-	skipIfNotExists("../testdata/graphic_info/GraphicInfo_66.bin", err, t)
+	err = res.OpenGraphicResource("../testdata/graphic_info/GraphicInfo_66.bin")
 	err = res.OpenGraphic("../testdata/graphic/Graphic_66.bin")
-	skipIfNotExists("../testdata/graphic/Graphic_66.bin", err, t)
 	err = res.OpenPalette("../testdata/palette/palet_00.cgp")
-	skipIfNotExists("../testdata/palette/palet_00.cgp", err, t)
 	err = res.OpenMap("../testdata/map/1091.dat")
 	skipIfNotExists("../testdata/map/1091.dat", err, t)
 

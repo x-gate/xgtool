@@ -103,10 +103,8 @@ func TestAnimeIndex_Load(t *testing.T) {
 
 			var err error
 			err = res.OpenAnimeResource(tc.aif)
-			skipIfNotExists(tc.aif, err, t)
 			err = res.OpenAnime(tc.af)
-			skipIfNotExists(tc.af, err, t)
-			err = res.OpenGraphicInfo(tc.gif)
+			err = res.OpenGraphicResource(tc.gif)
 			skipIfNotExists(tc.gif, err, t)
 
 			var aidx AnimeIndex
@@ -162,13 +160,9 @@ func TestAnime_GIF_ExternalPalette(t *testing.T) {
 
 			var err error
 			err = res.OpenAnimeResource(tc.aif)
-			skipIfNotExists(tc.aif, err, t)
 			err = res.OpenAnime(tc.af)
-			skipIfNotExists(tc.af, err, t)
-			err = res.OpenGraphicInfo(tc.gif)
-			skipIfNotExists(tc.gif, err, t)
+			err = res.OpenGraphicResource(tc.gif)
 			err = res.OpenGraphic(tc.gf)
-			skipIfNotExists(tc.gf, err, t)
 			err = res.OpenPalette(tc.pf)
 			skipIfNotExists(tc.pf, err, t)
 
@@ -279,16 +273,10 @@ func TestAnime_GIF_InternalPalette(t *testing.T) {
 
 			var err error
 			err = res.OpenAnimeResource(tc.aif)
-			skipIfNotExists(tc.aif, err, t)
 			err = res.OpenAnime(tc.af)
-			skipIfNotExists(tc.af, err, t)
-			err = res.OpenGraphicInfo(tc.gif)
-			skipIfNotExists(tc.gif, err, t)
+			err = res.OpenGraphicResource(tc.gif)
 			err = res.OpenGraphic(tc.gf)
-			skipIfNotExists(tc.gf, err, t)
-
-			err = pres.OpenGraphicInfo(tc.pgif)
-			skipIfNotExists(tc.pgif, err, t)
+			err = pres.OpenGraphicResource(tc.pgif)
 			err = pres.OpenGraphic(tc.pgf)
 			skipIfNotExists(tc.pgf, err, t)
 

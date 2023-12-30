@@ -52,7 +52,7 @@ func ConvertMap(ctx context.Context, args []string) (err error) {
 	res := pkg.Resources{}
 	defer res.Close()
 
-	if err = res.OpenGraphicInfo(f.gif); err != nil {
+	if err = res.OpenGraphicResource(f.gif); err != nil {
 		return
 	}
 	if err = res.OpenGraphic(f.gf); err != nil {

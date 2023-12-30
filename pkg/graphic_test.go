@@ -55,7 +55,7 @@ func TestNewGraphicResource(t *testing.T) {
 			defer res.Close()
 
 			var err error
-			err = res.OpenGraphicInfo(tc.infoName)
+			err = res.OpenGraphicResource(tc.infoName)
 			skipIfNotExists(tc.infoName, err, t)
 
 			gres, err := NewGraphicResource(res.GraphicInfoFile)
@@ -193,8 +193,7 @@ func TestGraphicInfo_LoadGraphic(t *testing.T) {
 			defer res.Close()
 
 			var err error
-			err = res.OpenGraphicInfo(tc.infoName)
-			skipIfNotExists(tc.infoName, err, t)
+			err = res.OpenGraphicResource(tc.infoName)
 			err = res.OpenGraphic(tc.graphicName)
 			skipIfNotExists(tc.graphicName, err, t)
 
@@ -232,8 +231,7 @@ func TestGraphicIndex_Load(t *testing.T) {
 	defer res.Close()
 
 	var err error
-	err = res.OpenGraphicInfo(GraphicInfoFile)
-	skipIfNotExists(GraphicInfoFile, err, t)
+	err = res.OpenGraphicResource(GraphicInfoFile)
 	err = res.OpenGraphic(GraphicFile)
 	skipIfNotExists(GraphicFile, err, t)
 
@@ -305,8 +303,7 @@ func TestGraphic_Img(t *testing.T) {
 			defer res.Close()
 
 			var err error
-			err = res.OpenGraphicInfo(tc.gif)
-			skipIfNotExists(tc.gif, err, t)
+			err = res.OpenGraphicResource(tc.gif)
 			err = res.OpenGraphic(tc.gf)
 			skipIfNotExists(tc.gf, err, t)
 
@@ -341,7 +338,7 @@ func BenchmarkGraphic_ImgRGBA(b *testing.B) {
 	res := Resources{}
 	defer res.Close()
 
-	_ = res.OpenGraphicInfo("../testdata/graphic_info/GraphicInfo_66.bin")
+	_ = res.OpenGraphicResource("../testdata/graphic_info/GraphicInfo_66.bin")
 	_ = res.OpenGraphic("../testdata/graphic/Graphic_66.bin")
 
 	gi, _ := readGraphicInfo(res.GraphicInfoFile)
@@ -359,7 +356,7 @@ func BenchmarkGraphic_ImgPaletted(b *testing.B) {
 	res := Resources{}
 	defer res.Close()
 
-	_ = res.OpenGraphicInfo("../testdata/graphic_info/GraphicInfo_66.bin")
+	_ = res.OpenGraphicResource("../testdata/graphic_info/GraphicInfo_66.bin")
 	_ = res.OpenGraphic("../testdata/graphic/Graphic_66.bin")
 
 	gi, _ := readGraphicInfo(res.GraphicInfoFile)
