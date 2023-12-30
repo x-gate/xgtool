@@ -13,11 +13,17 @@ import (
 )
 
 const (
-	AnimeInfoSize  = 12
+	// AnimeInfoSize every block of anime info is 12 bytes
+	AnimeInfoSize = 12
+
+	// AnimeFrameSize every block of anime frame is 10 bytes
 	AnimeFrameSize = 10
 )
 
+// AnimeID is the ID of an anime, from anime info.
 type AnimeID int32
+
+// ActionID is the ID of an action, from anime header
 type ActionID int16
 
 type animeInfo struct {
@@ -49,18 +55,25 @@ type animeFrame struct {
 	Graphic *Graphic
 }
 
+// Anime is a collection of frames.
 type Anime struct {
+	Index  AnimeIndex // point to the index of this anime
 	Header animeHeader
 	Frames []animeFrame
 }
 
+// AnimeIndex built from anime info, Animes are grouped by ActionID.
 type AnimeIndex struct {
 	Info   animeInfo
 	Animes map[ActionID][]Anime
 }
 
+// AnimeResource is a map of AnimeIndex, key is AnimeID in anime info.
 type AnimeResource map[AnimeID]AnimeIndex
 
+// NewAnimeResource creates a new AnimeResource from anime info file.
+//
+// The anime data hasn't been loaded yet, you need to call AnimeIndex.Load for each AnimeIndex.
 func NewAnimeResource(aif io.Reader) (ar AnimeResource, err error) {
 	ar = make(AnimeResource)
 
@@ -85,6 +98,7 @@ func NewAnimeResource(aif io.Reader) (ar AnimeResource, err error) {
 	return
 }
 
+// Load loads anime data from anime file.
 func (aidx AnimeIndex) Load(af io.ReadSeeker, gr GraphicResource) (err error) {
 	if _, err = af.Seek(int64(aidx.Info.Addr), io.SeekStart); err != nil {
 		return
@@ -99,6 +113,7 @@ func (aidx AnimeIndex) Load(af io.ReadSeeker, gr GraphicResource) (err error) {
 	for i := 0; i < int(aidx.Info.ActCnt); i++ {
 		var a Anime
 
+		a.Index = aidx
 		if a.Header, err = a.readHeader(af, hsz); err != nil {
 			return
 		}
@@ -147,6 +162,7 @@ func (a Anime) readFrames(af io.Reader, cnt int, gr GraphicResource) (f []animeF
 	return
 }
 
+// GIF creates a gif from anime frames with given palette
 func (a Anime) GIF(gf io.ReadSeeker, p color.Palette) (img *gif.GIF, err error) {
 	img = new(gif.GIF)
 

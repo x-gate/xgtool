@@ -68,6 +68,7 @@ func (r *Resources) OpenMap(mf string) (err error) {
 	return
 }
 
+// OpenAnimeResource opens an anime info file and makes AnimeResource.
 func (r *Resources) OpenAnimeResource(aif string) (err error) {
 	if r.AnimeInfoFile, err = os.Open(aif); err != nil {
 		return
