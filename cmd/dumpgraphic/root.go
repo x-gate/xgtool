@@ -83,7 +83,8 @@ func DumpGraphic(ctx context.Context, args []string) (err error) {
 }
 
 func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) (err error) {
-	g, err := info.LoadGraphic(gf)
+	var g *pkg.Graphic
+	g, err = info.LoadGraphic(gf)
 	if err != nil && (errors.Is(err, pkg.ErrInvalidMagic) || errors.Is(err, pkg.ErrDecodeFailed)) {
 		log.Warn().Msgf("Invalid Graphic: %+v", err)
 		return nil
@@ -92,9 +93,10 @@ func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) (err 
 	}
 
 	var img image.Image
-	if img, err = g.ImgRGBA(palette); err != nil {
-		log.Err(err).Send()
-		return
+	if img, err = g.ImgRGBA(palette); err != nil && errors.Is(err, pkg.ErrRenderFailed) {
+		return nil
+	} else if err != nil {
+		return err
 	}
 
 	var out *os.File
