@@ -63,15 +63,18 @@ func DumpGraphic(ctx context.Context, args []string) (err error) {
 
 	go func() {
 		defer close(done)
-		for _, gif := range res.GraphicResource.IDx {
+		for _, gifs := range res.GraphicResource.IDx {
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				if err = dumpGraphic(gif[0].Info, res.GraphicFile, res.Palette); err != nil {
-					log.Err(err).Send()
-					return
+				for i, gif := range gifs {
+					if err = dumpGraphic(gif.Info, res.GraphicFile, res.Palette, i); err != nil {
+						log.Err(err).Send()
+						return
+					}
 				}
+
 				_ = bar.Add(1)
 			}
 
@@ -82,8 +85,9 @@ func DumpGraphic(ctx context.Context, args []string) (err error) {
 	return nil
 }
 
-func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) (err error) {
-	g, err := info.LoadGraphic(gf)
+func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette, serial int) (err error) {
+	var g *pkg.Graphic
+	g, err = info.LoadGraphic(gf)
 	if err != nil && (errors.Is(err, pkg.ErrInvalidMagic) || errors.Is(err, pkg.ErrDecodeFailed)) {
 		log.Warn().Msgf("Invalid Graphic: %+v", err)
 		return nil
@@ -92,16 +96,18 @@ func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) (err 
 	}
 
 	var img image.Image
-	if img, err = g.ImgRGBA(palette); err != nil {
-		log.Err(err).Send()
-		return
+	if img, err = g.ImgRGBA(palette); err != nil && (errors.Is(err, pkg.ErrRenderFailed) || errors.Is(err, pkg.ErrEmptyPalette)) {
+		log.Warn().Msgf("Failed to render: %+v", err)
+		return nil
+	} else if err != nil {
+		return err
 	}
 
 	var out *os.File
 	if f.dr {
 		out, err = os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
 	} else {
-		out, err = os.OpenFile(fmt.Sprintf("%s/%d.jpg", filepath.Clean(f.outdir), g.Info.ID), os.O_WRONLY|os.O_CREATE, 0644)
+		out, err = os.OpenFile(fmt.Sprintf("%s/%d-%d.jpg", filepath.Clean(f.outdir), g.Info.ID, serial), os.O_WRONLY|os.O_CREATE, 0644)
 	}
 	if err != nil {
 		log.Err(err).Send()
