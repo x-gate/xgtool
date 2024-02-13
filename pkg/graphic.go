@@ -199,7 +199,7 @@ func (g *Graphic) decode(raw []byte) (decoded []byte, err error) {
 // ImgRGBA convert graphic data to image.RGBA
 func (g *Graphic) ImgRGBA(p color.Palette) (img *image.RGBA, err error) {
 	if len(g.PaletteData) == 0 && len(p) == 0 {
-		return nil, ErrEmptyPalette
+		return nil, fmt.Errorf("%w: info=%+v, header=%+v", ErrEmptyPalette, g.Info, g.Header)
 	} else if len(g.PaletteData) == 0 {
 		g.PaletteData = p
 	}
@@ -221,7 +221,7 @@ func (g *Graphic) ImgRGBA(p color.Palette) (img *image.RGBA, err error) {
 // ImgPaletted convert graphic data to image.Paletted
 func (g *Graphic) ImgPaletted(p color.Palette) (img *image.Paletted, err error) {
 	if len(g.PaletteData) == 0 && len(p) == 0 {
-		return nil, ErrEmptyPalette
+		return nil, fmt.Errorf("%w: info=%+v, header=%+v", ErrEmptyPalette, g.Info, g.Header)
 	} else if len(g.PaletteData) == 0 {
 		g.PaletteData = p
 	}

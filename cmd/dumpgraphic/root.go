@@ -93,7 +93,8 @@ func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) (err 
 	}
 
 	var img image.Image
-	if img, err = g.ImgRGBA(palette); err != nil && errors.Is(err, pkg.ErrRenderFailed) {
+	if img, err = g.ImgRGBA(palette); err != nil && (errors.Is(err, pkg.ErrRenderFailed) || errors.Is(err, pkg.ErrEmptyPalette)) {
+		log.Warn().Msgf("Failed to render: %+v", err)
 		return nil
 	} else if err != nil {
 		return err
