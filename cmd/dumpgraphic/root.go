@@ -63,15 +63,18 @@ func DumpGraphic(ctx context.Context, args []string) (err error) {
 
 	go func() {
 		defer close(done)
-		for _, gif := range res.GraphicResource.IDx {
+		for _, gifs := range res.GraphicResource.IDx {
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				if err = dumpGraphic(gif[0].Info, res.GraphicFile, res.Palette); err != nil {
-					log.Err(err).Send()
-					return
+				for i, gif := range gifs {
+					if err = dumpGraphic(gif.Info, res.GraphicFile, res.Palette, i); err != nil {
+						log.Err(err).Send()
+						return
+					}
 				}
+
 				_ = bar.Add(1)
 			}
 
@@ -82,7 +85,7 @@ func DumpGraphic(ctx context.Context, args []string) (err error) {
 	return nil
 }
 
-func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) (err error) {
+func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette, serial int) (err error) {
 	var g *pkg.Graphic
 	g, err = info.LoadGraphic(gf)
 	if err != nil && (errors.Is(err, pkg.ErrInvalidMagic) || errors.Is(err, pkg.ErrDecodeFailed)) {
@@ -104,7 +107,7 @@ func dumpGraphic(info pkg.GraphicInfo, gf *os.File, palette color.Palette) (err 
 	if f.dr {
 		out, err = os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
 	} else {
-		out, err = os.OpenFile(fmt.Sprintf("%s/%d.jpg", filepath.Clean(f.outdir), g.Info.ID), os.O_WRONLY|os.O_CREATE, 0644)
+		out, err = os.OpenFile(fmt.Sprintf("%s/%d-%d.jpg", filepath.Clean(f.outdir), g.Info.ID, serial), os.O_WRONLY|os.O_CREATE, 0644)
 	}
 	if err != nil {
 		log.Err(err).Send()
