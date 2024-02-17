@@ -2,9 +2,9 @@ package types
 
 // GraphicInfo structure for each graphic info in `GraphicInfo*.bin`, 40 bytes.
 type GraphicInfo struct {
-	ID     int32
-	Addr   int32
-	Len    int32
+	ID     int32 // ID, it's the index of the graphic in the file, but it could be duplicated.
+	Addr   int32 // File offset of the graphic data in `Graphic*.bin`.
+	Len    int32 // Length of the graphic data in `Graphic*.bin`.
 	OffX   int32
 	OffY   int32
 	Width  int32
@@ -13,7 +13,7 @@ type GraphicInfo struct {
 	GridH  byte
 	Access byte
 	_      [5]byte
-	MapID  int32
+	MapID  int32 // Map ID, it's the index of the map in `map/*.dat`, 0 for not a map graphic.
 }
 
 // GraphicDataHeader structure for each graphic header in `Graphic*.bin`, 16 bytes.
