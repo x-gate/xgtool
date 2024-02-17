@@ -16,12 +16,12 @@ type AnimeDataHeader struct {
 	FrameCnt int32
 }
 
-// AnimeDataHeaderEx struct for each anime header in `Anime*.bin` for version 2 and above (PUK2 and above), 18 bytes.
+// AnimeDataHeaderEx struct for each anime header in `Anime*.bin` for version 2 and above (PUK2 and above), 20 bytes.
 type AnimeDataHeaderEx struct {
 	AnimeDataHeader
 	_        int16
 	Reversed int16 // Reversed, odd number for reversed, even number for normal
-	Sentinel int32 // Sentinel, always 0xFFFFFFFF (-1) if it is an extended header
+	Sentinel int32 // Sentinel, always 0xFFFF (-1) if it is an extended header
 }
 
 // AnimeDataFrame structure for each anime frame in `Anime*.bin`, 10 bytes.

@@ -1,6 +1,6 @@
 module xgtool
 
-go 1.21
+go 1.22
 
 require (
 	github.com/cristalhq/acmd v0.11.2

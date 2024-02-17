@@ -7,8 +7,8 @@ type MapHeader struct {
 	Height int32
 }
 
-// Map structure for each map in `map/[0-9]+.dat`, 20 + width*height*2 (ground) + width*height*2 (object) + width*height*2 (metadata) bytes.
-type Map struct {
+// MapData structure for each map in `map/[0-9]+.dat`, 20 + width*height*2 (ground) + width*height*2 (object) + width*height*2 (metadata) bytes.
+type MapData struct {
 	MapHeader
 	Ground   []uint16 // Ground layer, 2 bytes per tile
 	Object   []uint16 // Object layer, 2 bytes per tile
